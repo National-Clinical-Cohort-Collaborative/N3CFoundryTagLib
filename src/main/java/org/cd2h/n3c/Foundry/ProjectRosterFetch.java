@@ -23,12 +23,12 @@ public class ProjectRosterFetch {
 	Connection conn = APIRequest.getConnection(prop_file);
 
 	JSONObject results = APIRequest.submit(prop_file, "n3c-website-approved-projects");
-	logger.info("results:\n" + results.toString(3));
+	logger.trace("results:\n" + results.toString(3));
 
 	APIRequest.simpleStmt("truncate n3c_admin.enclave_project");
 	
 	JSONArray hits = results.getJSONArray("hits");
-	logger.info("hits:\n" + hits.toString(3));
+	logger.debug("hits:\n" + hits.toString(3));
 	for (int i = 0; i < hits.length(); i++) {
 	    JSONObject hit = hits.getJSONObject(i).getJSONObject("object");
 	    String title = hit.getString("title");
@@ -36,7 +36,7 @@ public class ProjectRosterFetch {
 	    String statement = hit.getJSONObject("properties").getString("nonconfidential_research_statement");
 	    String investigator = hit.getJSONObject("properties").getString("lead_investigator");
 	    String task_team = hit.getJSONObject("properties").getString("is_task_team_project");
-	    logger.info("uid: " + uid + "\ttitle: " + title + "\tlead investigator: " + investigator + "\ttask team: " + task_team);
+	    logger.info("title: " + title + "\tlead investigator: " + investigator + "\ttask team: " + task_team);
 	    PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_project values(?,?,?,?,?::boolean)");
 	    stmt.setString(1, uid);
 	    stmt.setString(2, title);
@@ -47,5 +47,6 @@ public class ProjectRosterFetch {
 	    stmt.close();
 	}
 	conn.close();
+	logger.info("total: " + hits.length());
     }
 }

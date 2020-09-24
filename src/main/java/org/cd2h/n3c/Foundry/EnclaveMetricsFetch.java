@@ -28,7 +28,7 @@ public class EnclaveMetricsFetch {
 	APIRequest.simpleStmt("truncate n3c_admin.enclave_stats");
 	
 	JSONArray hits = results.getJSONArray("hits");
-	logger.info("hits:\n" + hits.toString(3));
+	logger.debug("hits:\n" + hits.toString(3));
 	for (int i = 0; i < hits.length(); i++) {
 	    JSONObject hit = hits.getJSONObject(i).getJSONObject("object");
 	    String title = hit.getString("title");
