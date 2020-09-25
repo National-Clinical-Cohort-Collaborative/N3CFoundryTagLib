@@ -11,6 +11,7 @@ import org.cd2h.n3c.Foundry.util.APIRequest;
 import org.cd2h.n3c.Foundry.util.LocalProperties;
 import org.cd2h.n3c.Foundry.util.PropertyLoader;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ProjectRosterFetch {
@@ -31,20 +32,25 @@ public class ProjectRosterFetch {
 	logger.debug("hits:\n" + hits.toString(3));
 	for (int i = 0; i < hits.length(); i++) {
 	    JSONObject hit = hits.getJSONObject(i).getJSONObject("object");
-	    String title = hit.getString("title");
-	    String uid = hit.getJSONObject("primaryKey").getString("project_uid");
-	    String statement = hit.getJSONObject("properties").getString("nonconfidential_research_statement");
-	    String investigator = hit.getJSONObject("properties").getString("lead_investigator");
-	    String task_team = hit.getJSONObject("properties").getString("is_task_team_project");
-	    logger.info("title: " + title + "\tlead investigator: " + investigator + "\ttask team: " + task_team);
-	    PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_project values(?,?,?,?,?::boolean)");
-	    stmt.setString(1, uid);
-	    stmt.setString(2, title);
-	    stmt.setString(3, statement);
-	    stmt.setString(4, investigator);
-	    stmt.setString(5, task_team);
-	    stmt.execute();
-	    stmt.close();
+	    try {
+		String title = hit.getString("title");
+		String uid = hit.getJSONObject("primaryKey").getString("project_uid");
+		String statement = hit.getJSONObject("properties").getString("nonconfidential_research_statement");
+		String investigator = hit.getJSONObject("properties").getString("lead_investigator");
+		String task_team = hit.getJSONObject("properties").getString("is_task_team_project");
+		logger.info("title: " + title + "\tlead investigator: " + investigator + "\ttask team: " + task_team);
+		PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_project values(?,?,?,?,?::boolean)");
+		stmt.setString(1, uid);
+		stmt.setString(2, title);
+		stmt.setString(3, statement);
+		stmt.setString(4, investigator);
+		stmt.setString(5, task_team);
+		stmt.execute();
+		stmt.close();
+	    } catch (JSONException e) {
+		logger.error("Error encountered: " + e);
+		logger.error("hit: " + hit.toString(3));
+	    }
 	}
 	conn.close();
 	logger.info("total: " + hits.length());
