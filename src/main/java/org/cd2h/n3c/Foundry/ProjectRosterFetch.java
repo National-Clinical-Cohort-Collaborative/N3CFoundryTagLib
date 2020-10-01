@@ -29,7 +29,7 @@ public class ProjectRosterFetch {
 	APIRequest.simpleStmt("truncate n3c_admin.enclave_project");
 	
 	JSONArray hits = results.getJSONArray("hits");
-	logger.debug("hits:\n" + hits.toString(3));
+	logger.info("hits:\n" + hits.toString(3));
 	for (int i = 0; i < hits.length(); i++) {
 	    JSONObject hit = hits.getJSONObject(i).getJSONObject("object");
 	    try {
@@ -38,13 +38,16 @@ public class ProjectRosterFetch {
 		String statement = hit.getJSONObject("properties").getString("nonconfidential_research_statement");
 		String investigator = hit.getJSONObject("properties").getString("lead_investigator");
 		String task_team = hit.getJSONObject("properties").getString("is_task_team_project");
+		String accessing_institution = hit.getJSONObject("properties").getString("accessing_institution");
 		logger.info("title: " + title + "\tlead investigator: " + investigator + "\ttask team: " + task_team);
-		PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_project values(?,?,?,?,?::boolean)");
+		logger.info("\taccessing_institution: " + accessing_institution);
+		PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_project values(?,?,?,?,?::boolean,?)");
 		stmt.setString(1, uid);
 		stmt.setString(2, title);
 		stmt.setString(3, statement);
 		stmt.setString(4, investigator);
 		stmt.setString(5, task_team);
+		stmt.setString(6, accessing_institution);
 		stmt.execute();
 		stmt.close();
 	    } catch (JSONException e) {
