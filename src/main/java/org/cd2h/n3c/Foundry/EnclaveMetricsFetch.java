@@ -42,7 +42,7 @@ public class EnclaveMetricsFetch {
 	}
 
 	// hack to correct flipped COVID-19 counts
-	APIRequest.simpleStmt("update n3c_admin.enclave_stats set count = (select count from n3c_admin.enclave_stats where title='person_rows')-count where title='covid_positive_patients'");
+//	APIRequest.simpleStmt("update n3c_admin.enclave_stats set count = (select count from n3c_admin.enclave_stats where title='person_rows')-count where title='covid_positive_patients'");
 	
 	conn.close();
     }
