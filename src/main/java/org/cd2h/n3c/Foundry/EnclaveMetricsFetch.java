@@ -23,7 +23,7 @@ public class EnclaveMetricsFetch {
 	Connection conn = APIRequest.getConnection(prop_file);
 
 	JSONObject results = APIRequest.submit("n3c-website-metrics");
-	logger.trace("results:\n" + results.toString(3));
+	logger.debug("results:\n" + results.toString(3));
 	
 	APIRequest.simpleStmt("truncate n3c_admin.enclave_stats");
 	
@@ -32,11 +32,11 @@ public class EnclaveMetricsFetch {
 	for (int i = 0; i < hits.length(); i++) {
 	    JSONObject hit = hits.getJSONObject(i).getJSONObject("object");
 	    String title = hit.getString("title");
-	    int count = hit.getJSONObject("properties").getInt("value");
-	    logger.info("title: " + title + "\tcount: " + count);
+	    String value = hit.getJSONObject("properties").getString("value");
+	    logger.info("title: " + title + "\tvalue: " + value);
 	    PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_stats values(?,?)");
 	    stmt.setString(1, title);
-	    stmt.setInt(2, count);
+	    stmt.setString(2, value);
 	    stmt.execute();
 	    stmt.close();
 	}
