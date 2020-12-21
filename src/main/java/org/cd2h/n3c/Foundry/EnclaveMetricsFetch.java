@@ -22,7 +22,7 @@ public class EnclaveMetricsFetch {
 	prop_file = PropertyLoader.loadProperties("n3c_foundry");
 	Connection conn = APIRequest.getConnection(prop_file);
 
-	JSONObject results = APIRequest.submit("n3c-website-metrics");
+	JSONObject results = APIRequest.fetchJSONObject("n3c-website-metrics");
 	logger.debug("results:\n" + results.toString(3));
 	
 	APIRequest.simpleStmt("truncate n3c_admin.enclave_stats");

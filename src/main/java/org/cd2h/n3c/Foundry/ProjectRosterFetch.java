@@ -23,7 +23,7 @@ public class ProjectRosterFetch {
 	prop_file = PropertyLoader.loadProperties("n3c_foundry");
 	Connection conn = APIRequest.getConnection(prop_file);
 
-	JSONObject results = APIRequest.submit(prop_file, "n3c-website-approved-projects");
+	JSONObject results = APIRequest.fetchJSONObject(prop_file, "n3c-website-approved-projects");
 	logger.trace("results:\n" + results.toString(3));
 
 	APIRequest.simpleStmt("truncate n3c_admin.enclave_project");
