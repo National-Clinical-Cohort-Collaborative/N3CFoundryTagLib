@@ -75,6 +75,12 @@ public class APIRequest {
 	}
     }
 
+    // Compass documentation: https://unite.nih.gov/workspace/documentation/developer/api/compass/services/CompassService/endpoints/getChildren
+    
+    // curl -X GET \
+    // -H "Authorization: Bearer $TOKEN" \
+    // "https://unite.nih.gov/compass/api/folders/ri.compass.main.folder.6d86aeb7-dcbe-468b-b9dd-3c8299d45e5b/children"
+    
     // curl -X GET \
     // -H "Authorization: Bearer $TOKEN" \
     // "https://unite.nih.gov/foundry-data-proxy/api/dataproxy/datasets/<datasetRid>/branches/master/csv"
