@@ -15,6 +15,8 @@ import org.apache.log4j.PropertyConfigurator;
 import org.cd2h.n3c.Foundry.util.APIRequest;
 import org.cd2h.n3c.Foundry.util.LocalProperties;
 import org.cd2h.n3c.Foundry.util.PropertyLoader;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class CohortDataFetch {
     static boolean load = true;
@@ -32,21 +34,40 @@ public class CohortDataFetch {
 		conn = APIRequest.getConnection(prop_file);
 		conn.setSchema("enclave_cohort");
 		initializeReserveHash();
-
-		PreparedStatement fetchStmt = conn.prepareStatement("select table_name,file_id from enclave_cohort.file_mapping");
-		ResultSet fetchRS = fetchStmt.executeQuery();
-		while (fetchRS.next()) {
-			String tableName = fetchRS.getString(1);
-			String fileID = fetchRS.getString(2);
-			logger.info("table name: " + tableName + "\tfile ID: " + fileID);
-			List<?> contents = APIRequest.fetchCSVFile(prop_file, fileID);
-			attributes = processLabels(contents);
-			setTypes(attributes, contents);
-			storeData(tableName, attributes, contents);
+		
+		JSONObject result = APIRequest.fetchDirectory(prop_file);
+		JSONArray  array  = result.getJSONArray("values");
+		for (int  i = 0; i < array.length();  i++)  {
+			JSONObject element  = array.getJSONObject(i);
+			String name  = element.getString("name");
+			logger.info("name: " +  name);
+			String rid  = element.getString("rid");
+			logger.info("\trid:  " +  rid);
+			process(name, rid);
 		}
-		fetchStmt.close();
+
+//		PreparedStatement fetchStmt = conn.prepareStatement("select table_name,file_id from enclave_cohort.file_mapping");
+//		ResultSet fetchRS = fetchStmt.executeQuery();
+//		while (fetchRS.next()) {
+//			String tableName = fetchRS.getString(1);
+//			String fileID = fetchRS.getString(2);
+//			logger.info("table name: " + tableName + "\tfile ID: " + fileID);
+//			List<?> contents = APIRequest.fetchCSVFile(prop_file, fileID);
+//			attributes = processLabels(contents);
+//			setTypes(attributes, contents);
+//			storeData(tableName, attributes, contents);
+//		}
+//		fetchStmt.close();
 
 		conn.close();
+	}
+	
+	static void process(String  tableName, String fileID) throws IOException, SQLException {
+		logger.info("table name: " + tableName + "\tfile ID: " + fileID);
+		List<?> contents = APIRequest.fetchCSVFile(prop_file, fileID);
+		attributes = processLabels(contents);
+		setTypes(attributes, contents);
+		storeData(generateSQLName(tableName.substring(5)), attributes, contents);
 	}
 
 	static Attribute[] processLabels(List<?> contents) {
