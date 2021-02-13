@@ -46,7 +46,7 @@ natural join
 ;
 
 create view comorbidity_view as
-select variable, mild_percentage as mild, mild_ed_percentage as mild_id, moderate_percentage as moderate, severe_percentage as severe, dead_w_covid_percentage as dead_w_covid, all_percentage as all, hospital_percentage as hospital from comorbidity_view_full 
+select variable, mild_percentage as mild, mild_ed_percentage as mild_ed, moderate_percentage as moderate, severe_percentage as severe, dead_w_covid_percentage as dead_w_covid, all_percentage as x__all, hospital_percentage as hospital from comorbidity_view_full 
 union
 select 'Totals' as variable,'(n = '||mild||')','(n = '||mild_ed||')','(n = '||moderate||')','(n = '||severe||')','(n = '||dead_w_covid||')','(n = '||all_cnt||')','(n = '||hospital||')'
 	from (select variable,sum(mild) as mild,sum(mild_ed) as mild_ed,sum(moderate) as moderate,sum(severe) as severe,sum(dead_w_covid) as dead_w_covid,sum(mild+mild_ed+moderate+severe+dead_w_covid) as all_cnt,sum(moderate+severe+dead_w_covid) as hospital from xport__charlson_uncollapsed_frequency group by 1 limit 1) as foo
