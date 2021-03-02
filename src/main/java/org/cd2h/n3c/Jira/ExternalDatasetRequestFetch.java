@@ -79,83 +79,86 @@ public class ExternalDatasetRequestFetch {
 	    logger.info("\tcreated: " + created);
 	    logger.info("\tupdated: " + updated);
 	    logger.info("\tpriority: " + priority);
+	    logger.debug("issue:\n" + issue.toString(3));
 
-	    JSONArray list = fields.getJSONObject("description").getJSONArray("content");
-	    for (int j = 0; j < list.length(); j++) {
-		JSONObject entry = list.getJSONObject(j);
-		if (!entry.getString("type").equals("bulletList"))
-		    continue;
-		JSONArray bullets = entry.getJSONArray("content");
-		for (int k = 0; k < bullets.length(); k++) {
-		    JSONObject bullet = bullets.getJSONObject(k);
-		    logger.debug("bullet: " + bullet.toString(3));
-		    JSONArray bulletContent = bullet.getJSONArray("content").getJSONObject(0).getJSONArray("content");
-		    String label = bulletContent.getJSONObject(0).getString("text").trim();
-		    String value = bulletContent.getJSONObject(1).getString("text").trim();
-		    logger.debug("label: " + label + "\tvalue: " + value);
-		    switch (label) {
-		    case "name:":
-			name = value;
-			break;
-		    case "description:":
-			description = value;
-			break;
-		    case "author.name:":
-			author_name = value;
-			break;
-		    case "author.orcid:":
-			author_orcid = value;
-			break;
-		    case "author.url:":
-			author_url = value;
-			break;
-		    case "author.affiliation.name:":
-			author_affiliation = value;
-			break;
-		    case "license:":
-			license = value;
-			break;
-		    case "cost:":
-			cost = value;
-			break;
-		    case "url:":
-			url = value;
-			break;
-		    case "identifier:":
-			identifier = value;
-			break;
-		    case "contain_geo_codes:":
-			contain_geo_codes = value;
-			break;
-		    case "contain_phi:":
-			contain_phi = value;
-			break;
-		    case "domain_team_relevance:":
-			domain_team_relevance = domain_team_relevance == null ? value : domain_team_relevance+"; "+value;
-			break;
-		    case "justification:":
-			justification = value;
-			break;
-		    case "contact:":
-			contact = value;
-			break;
-		    case "documentation:":
-			documentation = value;
-			break;
-		    case "keywords:":
-			keywords = value;
-			break;
-		    case "citation.name:":
-			citation_name = value;
-			break;
-		    case "citation.doi:":
-			citation_doi = value;
-			break;
-		    case "citation.url:":
-			citation_url = value;
-			break;
-		    default:
-			logger.error(">>>>>>> unknown label: " + label + "\tvalue: " + value);
+	    if (fields.optJSONObject("description") != null) {
+		JSONArray list = fields.getJSONObject("description").getJSONArray("content");
+		for (int j = 0; j < list.length(); j++) {
+		    JSONObject entry = list.getJSONObject(j);
+		    if (!entry.getString("type").equals("bulletList"))
+			continue;
+		    JSONArray bullets = entry.getJSONArray("content");
+		    for (int k = 0; k < bullets.length(); k++) {
+			JSONObject bullet = bullets.getJSONObject(k);
+			logger.debug("bullet: " + bullet.toString(3));
+			JSONArray bulletContent = bullet.getJSONArray("content").getJSONObject(0).getJSONArray("content");
+			String label = bulletContent.getJSONObject(0).getString("text").trim();
+			String value = bulletContent.getJSONObject(1).getString("text").trim();
+			logger.debug("label: " + label + "\tvalue: " + value);
+			switch (label) {
+			case "name:":
+			    name = value;
+			    break;
+			case "description:":
+			    description = value;
+			    break;
+			case "author.name:":
+			    author_name = value;
+			    break;
+			case "author.orcid:":
+			    author_orcid = value;
+			    break;
+			case "author.url:":
+			    author_url = value;
+			    break;
+			case "author.affiliation.name:":
+			    author_affiliation = value;
+			    break;
+			case "license:":
+			    license = value;
+			    break;
+			case "cost:":
+			    cost = value;
+			    break;
+			case "url:":
+			    url = value;
+			    break;
+			case "identifier:":
+			    identifier = value;
+			    break;
+			case "contain_geo_codes:":
+			    contain_geo_codes = value;
+			    break;
+			case "contain_phi:":
+			    contain_phi = value;
+			    break;
+			case "domain_team_relevance:":
+			    domain_team_relevance = domain_team_relevance == null ? value : domain_team_relevance + "; " + value;
+			    break;
+			case "justification:":
+			    justification = value;
+			    break;
+			case "contact:":
+			    contact = value;
+			    break;
+			case "documentation:":
+			    documentation = value;
+			    break;
+			case "keywords:":
+			    keywords = value;
+			    break;
+			case "citation.name:":
+			    citation_name = value;
+			    break;
+			case "citation.doi:":
+			    citation_doi = value;
+			    break;
+			case "citation.url:":
+			    citation_url = value;
+			    break;
+			default:
+			    logger.error(">>>>>>> unknown label: " + label + "\tvalue: " + value);
+			}
 		    }
 		}
 	    }
