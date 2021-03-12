@@ -3,7 +3,6 @@ package org.cd2h.n3c.Foundry;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -46,28 +45,20 @@ public class CohortDataFetch {
 			process(name, rid);
 		}
 
-//		PreparedStatement fetchStmt = conn.prepareStatement("select table_name,file_id from enclave_cohort.file_mapping");
-//		ResultSet fetchRS = fetchStmt.executeQuery();
-//		while (fetchRS.next()) {
-//			String tableName = fetchRS.getString(1);
-//			String fileID = fetchRS.getString(2);
-//			logger.info("table name: " + tableName + "\tfile ID: " + fileID);
-//			List<?> contents = APIRequest.fetchCSVFile(prop_file, fileID);
-//			attributes = processLabels(contents);
-//			setTypes(attributes, contents);
-//			storeData(tableName, attributes, contents);
-//		}
-//		fetchStmt.close();
-
 		conn.close();
 	}
 	
-	static void process(String  tableName, String fileID) throws IOException, SQLException {
+	static void process(String  enclaveTableName, String fileID) throws IOException, SQLException {
+		String tableName = enclaveTableName;
+		if (tableName.startsWith("[CC] ") || tableName.startsWith("[CC[ "))
+			tableName = tableName.substring(5);
+		if (tableName.startsWith("[CC Export] "))
+			tableName = tableName.substring(12);
 		logger.info("table name: " + tableName + "\tfile ID: " + fileID);
 		List<?> contents = APIRequest.fetchCSVFile(prop_file, fileID);
 		attributes = processLabels(contents);
 		setTypes(attributes, contents);
-		storeData(generateSQLName(tableName.substring(5)), attributes, contents);
+		storeData(generateSQLName(tableName), attributes, contents);
 	}
 
 	static Attribute[] processLabels(List<?> contents) {
@@ -107,9 +98,12 @@ public class CohortDataFetch {
 	}
 
 	static void setType(Attribute theAttribute, List<?> contents) {
-		if (isType(theAttribute.index, "-?[0-9]*", contents))
-			theAttribute.type = "int";
-		else if (isType(theAttribute.index, "(-?[0-9]+([.][0-9]+)?)?", contents))
+		if (isType(theAttribute.index, "-?[0-9]*", contents)) {
+			if (isInt(theAttribute.index,contents))
+				theAttribute.type = "int";
+			else
+				theAttribute.type = "bigint";
+		} else if (isType(theAttribute.index, "(-?[0-9]+([.][0-9]+)?)?", contents))
 			theAttribute.type = "float";
 		else if (isType(theAttribute.index, "([yY]([eE][sS])?|[nN]([oO])?)?", contents))
 			theAttribute.type = "boolean";
@@ -134,6 +128,20 @@ public class CohortDataFetch {
 				return false;
 		}
 		return nonEmpty;
+	}
+	
+	static boolean isInt(int index, List<?> contents) {
+		try {
+			Iterator<?> iterator = contents.iterator();
+			iterator.next();
+			while (iterator.hasNext()) {
+				String[] contentArray = (String[]) iterator.next();
+				Integer.parseInt(contentArray[index]);
+			}
+			return true;
+		} catch (NumberFormatException e) {
+			return false;
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -166,6 +174,8 @@ public class CohortDataFetch {
 					insertStmt.setNull(i + 1, sqlNullType(attributes[i].type));
 				else if (attributes[i].type.equals("int"))
 					insertStmt.setInt(i + 1, Integer.parseInt(contentArray[i]));
+				else if (attributes[i].type.equals("bigint"))
+					insertStmt.setLong(i + 1, Long.parseLong(contentArray[i]));
 				else if (attributes[i].type.equals("float"))
 					insertStmt.setFloat(i + 1, Float.parseFloat(contentArray[i]));
 				else if (attributes[i].type.equals("boolean"))
@@ -184,6 +194,8 @@ public class CohortDataFetch {
 	static int sqlNullType(String type) {
 		if (type.equals("int"))
 			return java.sql.Types.INTEGER;
+		else if (type.equals("bigint"))
+			return java.sql.Types.BIGINT;
 		else if (type.equals("float"))
 			return java.sql.Types.FLOAT;
 		else if (type.equals("boolean"))

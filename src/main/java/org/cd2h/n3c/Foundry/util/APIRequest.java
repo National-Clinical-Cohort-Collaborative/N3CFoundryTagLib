@@ -116,6 +116,10 @@ public class APIRequest {
 
 	public static JSONObject fetchDirectory(LocalProperties pfile) throws IOException {
 		String directoryID = prop_file.getProperty("api.directory");
+		return fetchDirectory(directoryID);
+	}
+
+	public static JSONObject fetchDirectory(String directoryID) throws IOException {
 		logger.info("directory ID: " + directoryID);
 		JSONObject response = fetchCompassJSONObject("https://unite.nih.gov/compass/api/folders/" + directoryID + "/children");
 		logger.info(response.toString(3));
@@ -167,6 +171,7 @@ public class APIRequest {
 			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 			CSVReader csvr = new CSVReader(in, separator);
 			List<?> contents = csvr.readAll();
+			csvr.close();
 			logger.debug("contents:\n" + contents);
 			in.close();
 			return contents;
