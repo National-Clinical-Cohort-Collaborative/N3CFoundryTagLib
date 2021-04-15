@@ -66,24 +66,29 @@ insert into enclave_cohort.map_state(name,abbrev,id) values( 'West Virginia', 'W
 insert into enclave_cohort.map_state(name,abbrev,id) values(  'Wisconsin',  'WI', 8);
 insert into enclave_cohort.map_state(name,abbrev,id) values( 'Wyoming', 'WY', 6);
 
-create view enclave_cohort.site_staging as 
-select institutionid,institutionname,datamodelfinal,submitted,released,latitude,longitude from enclave_cohort.data_acquisition_site_tracker,ror.address where institutionid=id
+create view enclave_cohort.site_staging_new as 
+	select institutionid,institutionname,latitude,longitude
+	from n3c_admin.dta_master,ror.address
+	where dtaexecuted is not null and institutionid=id
 union
-select institutionid,institutionname,datamodelfinal,submitted,released,latitude,longitude from enclave_cohort.data_acquisition_site_tracker,enclave_cohort.ror_miss where institutionid=id
+	select institutionid,institutionname,latitude,longitude
+	from n3c_admin.dta_master,enclave_cohort.map_backfill
+	where dtaexecuted is not null and institutionid=id
 ;
 
-create view enclave_cohort.site_staging2 as 
-select * from site_staging
-union
-select institutionid,institutionname,'' as datamodelfinal,'' as submitted,'' as released,latitude,longitude from n3c_admin.dta_master,ror.address where dtaexecuted is not null and institutionid=id and institutionid not in (select institutionid from site_staging)
-union
-select institutionid,institutionname,'' as datamodelfinal,'' as submitted,'' as released,latitude,longitude from n3c_admin.dta_master,ror_miss where dtaexecuted is not null and institutionid=id and institutionid not in (select institutionid from site_staging)
+create view enclave_cohort.site_staging_new2 as 
+select foo.*,datamodelfinal,submitted,released
+from
+	enclave_cohort.site_staging_new as foo
+natural left join
+	enclave_cohort.data_acquisition_site_tracker
 ;
 
-create view enclave_cohort.map_sites as
+
+create view enclave_cohort.map_sites_new as
 select
-	site_staging2.institutionid as id,
-	site_staging2.institutionname as site,
+	site_staging_new2.institutionid as id,
+	site_staging_new2.institutionname as site,
 	'http://'||institutionhomepage as url,
 	regexp_replace(clinorgtype, ' .*', '') as type,
 	case
@@ -98,7 +103,7 @@ select
 	latitude,
 	longitude
 from
-site_staging2 left outer join institution_master
-on site_staging2.institutionid = institution_master.institutionid
-where site_staging2.institutionid not in (select id from enclave_cohort.site_suppress)
+enclave_cohort.site_staging_new2 left outer join enclave_cohort.institution_master
+on site_staging_new2.institutionid = institution_master.institutionid
 ;
+
