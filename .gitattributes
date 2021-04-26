@@ -13,6 +13,7 @@ src/main/java/org/cd2h/n3c/Foundry/CohortDataFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/EnclaveMetricsFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/PhenoDataFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/ProjectRosterFetch.java -text
+src/main/java/org/cd2h/n3c/Foundry/SiteStatusFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/util/APIRequest.java -text
 src/main/java/org/cd2h/n3c/Foundry/util/LocalProperties.java -text
 src/main/java/org/cd2h/n3c/Foundry/util/PropertyLoader.java -text

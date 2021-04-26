@@ -105,7 +105,7 @@ public class CohortDataFetch {
 				theAttribute.type = "bigint";
 		} else if (isType(theAttribute.index, "(-?[0-9]+([.][0-9]+)?)?", contents))
 			theAttribute.type = "float";
-		else if (isType(theAttribute.index, "([yY]([eE][sS])?|[nN]([oO])?)?", contents))
+		else if (isType(theAttribute.index, "([yY]([eE][sS])?|[nN]([oO])?|[tT]([rR][uU][eE])?|[fF]([aA][lL][sS][eE])?)?", contents))
 			theAttribute.type = "boolean";
 		else if (isType(theAttribute.index,
 				"([0-3]?[0-9]-(J[aA][nN]|F[eE][bB]|M[aA][rR]|A[pP][rR]|M[aA][yY]|J[uU][nN]|J[uU][lL]|A[uU][gG]|S[eE][pP]|O[cC][tT]|N[oO][vV]|D[eE][cC])-[0-9][0-9]([0-9][0-9])?)?",
