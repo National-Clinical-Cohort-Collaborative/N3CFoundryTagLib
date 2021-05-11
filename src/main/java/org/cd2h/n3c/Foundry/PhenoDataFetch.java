@@ -18,17 +18,26 @@ public class PhenoDataFetch extends CohortDataFetch {
 		conn.setSchema("enclave_data");
 		initializeReserveHash();
 		
-		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("pheno.directory"));
+//		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("pheno.directory"));
+//		process(result);
+
+		JSONObject result2 = APIRequest.fetchDirectory(prop_file.getProperty("pheno.directory2"));
+		process(result2);
+
+		conn.close();
+	}
+	
+	static void process(JSONObject result) throws IOException, SQLException {
 		JSONArray  array  = result.getJSONArray("values");
 		for (int  i = 0; i < array.length();  i++)  {
 			JSONObject element  = array.getJSONObject(i);
 			String name  = element.getString("name");
 			logger.info("name: " +  name);
+			if (name.equals("Copy Approved Downloads"))
+				continue;
 			String rid  = element.getString("rid");
 			logger.info("\trid:  " +  rid);
 			process(name, rid);
 		}
-
-		conn.close();
 	}
 }
