@@ -18,8 +18,8 @@ public class PhenoDataFetch extends CohortDataFetch {
 		conn.setSchema("enclave_data");
 		initializeReserveHash();
 		
-//		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("pheno.directory"));
-//		process(result);
+		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("pheno.directory"));
+		process(result);
 
 		JSONObject result2 = APIRequest.fetchDirectory(prop_file.getProperty("pheno.directory2"));
 		process(result2);
