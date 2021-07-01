@@ -8,6 +8,7 @@
 .settings/org.eclipse.wst.validation.prefs -text
 .settings/org.maven.ide.eclipse.prefs -text
 /pom.xml -text svneol=unset#application/xml
+src/main/java/org/cd2h/n3c/ConceptSet/Indexer.java -text
 src/main/java/org/cd2h/n3c/Foundry/AchillesDataFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/CohortDataFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/ConceptSetFetch.java -text
