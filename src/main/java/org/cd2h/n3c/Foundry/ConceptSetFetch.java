@@ -41,6 +41,7 @@ public class ConceptSetFetch {
 			logger.info("\trid:  " + rid);
 			if (rid.equals(prop_file.getProperty("concept.member"))
 					|| rid.equals(prop_file.getProperty("concept.version"))
+					|| rid.equals(prop_file.getProperty("concept.provisional"))
 					|| rid.equals(prop_file.getProperty("concept.container"))) {
 				process(name,rid);
 			}
@@ -55,6 +56,8 @@ public class ConceptSetFetch {
 			tableName = tableName.substring(12);
 		logger.info("table name: " + tableName + "\tfile ID: " + fileID);
 		List<?> contents = APIRequest.fetchCSVFile(prop_file, fileID);
+		if (contents == null)
+			return;
 		attributes = CohortDataFetch.processLabels(contents);
 		CohortDataFetch.setTypes(attributes, contents);
 		storeData(CohortDataFetch.generateSQLName(tableName), attributes, contents);
