@@ -27,6 +27,8 @@ import org.apache.lucene.util.Version;
 import org.cd2h.n3c.Foundry.util.LocalProperties;
 import org.cd2h.n3c.Foundry.util.PropertyLoader;
 
+import edu.uiowa.lucene.biomedical.BiomedicalAnalyzer;
+
 public class Indexer {
 	static Logger logger = Logger.getLogger(Indexer.class);
 	static String pathPrefix = "/usr/local/CD2H/lucene/";
@@ -41,7 +43,7 @@ public class Indexer {
 		Directory indexDir = FSDirectory.open(new File(pathPrefix + "concept_sets"));
 		Directory taxoDir = FSDirectory.open(new File(pathPrefix + "concept_sets_tax"));
 
-		IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_43,	new StandardAnalyzer(org.apache.lucene.util.Version.LUCENE_43));
+		IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_43,	new BiomedicalAnalyzer());
 		config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
 		IndexWriter indexWriter = new IndexWriter(indexDir, config);
 
@@ -74,10 +76,10 @@ public class Indexer {
 		    List<CategoryPath> paths = new ArrayList<CategoryPath>();
 		    
 		    theDocument.add(new Field("id", id+"", Field.Store.YES, Field.Index.NOT_ANALYZED));
-			theDocument.add(new Field("content", id+"", Field.Store.NO, Field.Index.ANALYZED));
+			theDocument.add(new Field("content", id+" ", Field.Store.NO, Field.Index.ANALYZED));
 		    paths.add(new CategoryPath("Status/"+status, '/'));
-			theDocument.add(new Field("label", name, Field.Store.YES, Field.Index.ANALYZED));
-			theDocument.add(new Field("content", name, Field.Store.NO, Field.Index.ANALYZED));
+			theDocument.add(new Field("label", name, Field.Store.YES, Field.Index.NOT_ANALYZED));
+			theDocument.add(new Field("content", name+" ", Field.Store.NO, Field.Index.ANALYZED));
 
 		    PreparedStatement substmt = conn.prepareStatement("select domain_id,concept_code,concept_name,concept_class_id from enclave_concept.code_set_concept where not is_excluded and codeset_id = ?");
 			substmt.setInt(1, id);
@@ -90,13 +92,13 @@ public class Indexer {
 				logger.info("\tdomain id: " + domain_id + "\tconcept code: " + concept_code + "\tname: " + concept_name + "\tclass: " + concept_class);
 
 				paths.add(new CategoryPath("Domain/"+domain_id, '/'));
-				theDocument.add(new Field("content", domain_id, Field.Store.NO, Field.Index.ANALYZED));
+				theDocument.add(new Field("content", domain_id+" ", Field.Store.NO, Field.Index.ANALYZED));
 
-				theDocument.add(new Field("content", concept_code, Field.Store.NO, Field.Index.ANALYZED));
-				theDocument.add(new Field("content", concept_name, Field.Store.NO, Field.Index.ANALYZED));
+				theDocument.add(new Field("content", concept_code+" ", Field.Store.NO, Field.Index.ANALYZED));
+				theDocument.add(new Field("content", concept_name+" ", Field.Store.NO, Field.Index.ANALYZED));
 
 				paths.add(new CategoryPath("Class/"+concept_class, '/'));
-				theDocument.add(new Field("content", concept_class, Field.Store.NO, Field.Index.ANALYZED));
+				theDocument.add(new Field("content", concept_class+" ", Field.Store.NO, Field.Index.ANALYZED));
 			}
 			substmt.close();
 			
