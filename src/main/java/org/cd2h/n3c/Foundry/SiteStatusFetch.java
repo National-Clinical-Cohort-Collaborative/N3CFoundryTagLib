@@ -27,7 +27,7 @@ public class SiteStatusFetch {
 		PropertyConfigurator.configure(args[0]);
 		prop_file = PropertyLoader.loadProperties("n3c_foundry");
 		conn = APIRequest.getConnection(prop_file);
-		conn.setSchema("n3c_admin");
+		conn.setSchema("n3c_maps");
 
 		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("site.status"));
 		JSONArray array = result.getJSONArray("values");
