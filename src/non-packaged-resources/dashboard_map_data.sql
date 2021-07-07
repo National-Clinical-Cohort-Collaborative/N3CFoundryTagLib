@@ -107,3 +107,34 @@ enclave_cohort.site_staging_new2 left outer join enclave_cohort.institution_mast
 on site_staging_new2.institutionid = institution_master.institutionid
 ;
 
+
+---------------------------------------------
+
+create schema n3c_maps;
+
+create table n3c_maps.site_mapping (
+	abbreviation text,
+	ror text
+	);
+
+create table site_statis_for_export (
+	processed_in_foundry boolean,
+	released boolean,
+	site_name text,
+	abbreviation text,
+	sftp_folder_name text,
+	cdm text
+	);
+
+SELECT
+	site_mapping.abbreviation,
+    site_mapping.ror,
+    dta_master.institutionname,
+    site_status_for_export.site_name
+FROM
+	site_mapping,
+    n3c_admin.dta_master,
+    site_status_for_export
+WHERE site_status_for_export.abbreviation = site_mapping.abbreviation
+  AND site_mapping.dta_ror = dta_master.institutionid
+;
