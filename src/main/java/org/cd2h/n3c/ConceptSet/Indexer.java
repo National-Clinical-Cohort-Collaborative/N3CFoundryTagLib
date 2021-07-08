@@ -13,7 +13,6 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.facet.index.FacetFields;
@@ -77,7 +76,7 @@ public class Indexer {
 		    
 		    theDocument.add(new Field("id", id+"", Field.Store.YES, Field.Index.NOT_ANALYZED));
 			theDocument.add(new Field("content", id+" ", Field.Store.NO, Field.Index.ANALYZED));
-		    paths.add(new CategoryPath("Status/"+status, '/'));
+		    paths.add(new CategoryPath("N3C Status/"+status, '/'));
 			theDocument.add(new Field("label", name, Field.Store.YES, Field.Index.NOT_ANALYZED));
 			theDocument.add(new Field("content", name+" ", Field.Store.NO, Field.Index.ANALYZED));
 
@@ -91,13 +90,13 @@ public class Indexer {
 				String concept_class = subrs.getString(4);
 				logger.info("\tdomain id: " + domain_id + "\tconcept code: " + concept_code + "\tname: " + concept_name + "\tclass: " + concept_class);
 
-				paths.add(new CategoryPath("Domain/"+domain_id, '/'));
+				paths.add(new CategoryPath("OMOP Domain/"+domain_id, '/'));
 				theDocument.add(new Field("content", domain_id+" ", Field.Store.NO, Field.Index.ANALYZED));
 
 				theDocument.add(new Field("content", concept_code+" ", Field.Store.NO, Field.Index.ANALYZED));
 				theDocument.add(new Field("content", concept_name+" ", Field.Store.NO, Field.Index.ANALYZED));
 
-				paths.add(new CategoryPath("Class/"+concept_class, '/'));
+				paths.add(new CategoryPath("OMOP Class/"+concept_class, '/'));
 				theDocument.add(new Field("content", concept_class+" ", Field.Store.NO, Field.Index.ANALYZED));
 			}
 			substmt.close();
