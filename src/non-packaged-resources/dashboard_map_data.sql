@@ -138,3 +138,81 @@ FROM
 WHERE site_status_for_export.abbreviation = site_mapping.abbreviation
   AND site_mapping.dta_ror = dta_master.institutionid
 ;
+
+create view n3c_maps.staging_enclave as
+select
+	ror as id,
+	case
+		when site_name = 'uofcahealth' then institutionname
+		else site_name
+	end as site,
+	'http://'||institutionhomepage as url,
+	regexp_replace(clinorgtype, ' .*', '') as type,
+	cdm as data_model,
+	case
+		when processed_in_foundry and released then 'available'
+		when processed_in_foundry then 'submitted'
+		else 'pending'
+	end as status,
+	latitude,
+	longitude
+from
+	n3c_maps.site_mapping,
+	ror.address,
+	n3c_maps.site_status_for_export,
+	enclave_cohort.institution_master
+where ror=id
+  and site_mapping.abbreviation=site_status_for_export.abbreviation
+  and site_mapping.dta_ror = institution_master.institutionid
+;
+
+create view n3c_maps.staging_pending as
+select
+	dta_master.institutionid as id,
+	dta_master.institutionname as site,
+	'http://'||institutionhomepage as url,
+	regexp_replace(clinorgtype, ' .*', '') as type,
+	'pending' as data_model,
+	'pending' as status,
+	latitude,
+	longitude
+from
+	n3c_admin.dta_master,
+	ror.address,
+	enclave_cohort.institution_master
+where dta_master.institutionid not in (select dta_ror from n3c_maps.site_mapping)
+  and dta_master.institutionid = institution_master.institutionid
+  and dta_master.institutionid = address.id
+  and dta_master.dtaexecuted is not null
+;
+
+create view n3c_maps.staging_no_ror as
+select
+	dta_master.institutionid as id,
+	dta_master.institutionname as site,
+	'http://'||institutionhomepage as url,
+	regexp_replace(clinorgtype, ' .*', '') as type,
+	'pending' as data_model,
+	'pending' as status,
+	latitude,
+	longitude
+from
+	n3c_admin.dta_master,
+	n3c_maps.site_mapping,
+	ror.address,
+	enclave_cohort.institution_master
+where dta_master.institutionid not in (select dta_ror from n3c_maps.staging_enclave)
+  and dta_master.institutionid not in (select dta_ror from n3c_maps.staging_pending)
+  and dta_master.institutionid = site_mapping.ror
+  and dta_master.dtaexecuted is not null
+  and site_mapping.dta_ror = institution_master.institutionid
+  and site_mapping.dta_ror = address.id
+;
+
+create view n3c_maps.sites as
+select * from n3c_maps.staging_enclave
+union
+select * from n3c_maps.staging_pending
+union
+select * from n3c_maps.staging_no_ror
+;
