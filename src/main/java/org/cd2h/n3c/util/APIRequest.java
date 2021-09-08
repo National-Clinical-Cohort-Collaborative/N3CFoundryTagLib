@@ -1,4 +1,4 @@
-package org.cd2h.n3c.Foundry.util;
+package org.cd2h.n3c.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

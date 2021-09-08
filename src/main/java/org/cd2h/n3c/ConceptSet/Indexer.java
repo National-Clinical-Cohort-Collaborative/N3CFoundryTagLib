@@ -23,8 +23,8 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
-import org.cd2h.n3c.Foundry.util.LocalProperties;
-import org.cd2h.n3c.Foundry.util.PropertyLoader;
+import org.cd2h.n3c.util.LocalProperties;
+import org.cd2h.n3c.util.PropertyLoader;
 
 import edu.uiowa.lucene.biomedical.BiomedicalAnalyzer;
 
@@ -61,22 +61,20 @@ public class Indexer {
 	@SuppressWarnings("deprecation")
 	static void indexConceptSets(IndexWriter indexWriter, FacetFields facetFields) throws SQLException, IOException {
 		int count = 0;
-		PreparedStatement stmt = conn.prepareStatement("select codeset_id,concept_set_name,status from enclave_concept.code_sets where is_most_recent_version and status is not null");
+		PreparedStatement stmt = conn.prepareStatement("select codeset_id,alias from enclave_concept.concept_set where alias is not null");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
 			count++;
 			
 			int id = rs.getInt(1);
 			String name = rs.getString(2);
-			String status = rs.getString(3);
-			logger.info("id: " + id + "\tstatus: " + status + "\tname: " + name);
+			logger.info("id: " + id + "\tname: " + name);
 			
 		    Document theDocument = new Document();
 		    List<CategoryPath> paths = new ArrayList<CategoryPath>();
 		    
 		    theDocument.add(new Field("id", id+"", Field.Store.YES, Field.Index.NOT_ANALYZED));
 			theDocument.add(new Field("content", id+" ", Field.Store.NO, Field.Index.ANALYZED));
-		    paths.add(new CategoryPath("N3C Status/"+status, '/'));
 			theDocument.add(new Field("label", name, Field.Store.YES, Field.Index.NOT_ANALYZED));
 			theDocument.add(new Field("content", name+" ", Field.Store.NO, Field.Index.ANALYZED));
 
@@ -101,7 +99,8 @@ public class Indexer {
 			}
 			substmt.close();
 			
-		    facetFields.addFields(theDocument, paths);
+		    if (paths.size() > 0)
+		    	facetFields.addFields(theDocument, paths);
 		    indexWriter.addDocument(theDocument);
 		}
 		stmt.close();

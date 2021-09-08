@@ -11,9 +11,9 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.cd2h.n3c.Foundry.util.APIRequest;
-import org.cd2h.n3c.Foundry.util.LocalProperties;
-import org.cd2h.n3c.Foundry.util.PropertyLoader;
+import org.cd2h.n3c.util.APIRequest;
+import org.cd2h.n3c.util.LocalProperties;
+import org.cd2h.n3c.util.PropertyLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

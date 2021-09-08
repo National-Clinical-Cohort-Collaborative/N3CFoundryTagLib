@@ -20,3 +20,69 @@ cross join lateral
     jsonb_array_elements_text((((regexp_replace(atlas_json,'\n',' ','g')::jsonb->>'expression')::jsonb)->>'items')::jsonb) with ordinality as t(item,seqnum)
 where atlas_json is not null;
 
+create view enclave_concept.concept_set as
+select
+	foo.*,
+	provisional_approval_date,
+	release_name
+from
+	(select
+		codeset_id,
+		alias,
+		code_sets.intention,
+		version,
+		is_most_recent_version,
+		update_message,
+		code_sets.created_by,
+		limitations,
+		issues,
+		provenance,
+		jsonb_pretty(regexp_replace(atlas_json,'\n',' ','g')::jsonb) as json
+	from
+		enclave_concept.code_sets,
+		enclave_concept.concept_set_container_edited
+	where code_sets.concept_set_name = concept_set_container_edited.concept_set_id
+	  and concept_set_container_edited.status != 'Under Construction'
+	  and is_most_recent_version
+	) as foo
+left outer join
+	enclave_concept.provisional_approvals
+on (codeset_id=concept_set_id)
+;
+
+create view enclave_concept.concept_set_project as
+select
+	concept_set.codeset_id,
+	alias,
+	research_project_id,
+	title
+from
+	enclave_concept.concept_set
+natural join
+	enclave_concept.concept_set_to_research_project_edited
+join
+	n3c_admin.enclave_project
+on (research_project_id= uid)
+;
+
+create table zenodo_deposit_raw(raw jsonb);
+
+create table zenodo_file_raw(codeset_id int, raw jsonb);
+
+create view zenodo_file as
+select
+	codeset_id,
+	(raw->>'created')::date as created,
+	(raw->>'updated')::date as updated,
+	((raw->>'links')::jsonb)->>'self' as url
+from zenodo_file_raw
+;
+
+create view zenodo_deposit as
+select
+	(raw->>'id')::int as id,
+	raw->>'title' as title,
+	(raw->>'created')::date as created,
+	(raw->>'modified')::date as modified
+from zenodo_deposit_raw
+;
