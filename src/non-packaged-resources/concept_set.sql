@@ -50,6 +50,19 @@ left outer join
 on (codeset_id=concept_set_id)
 ;
 
+create view enclave_concept_concept_set_display as
+select
+	concept_set.*,
+	first_name,
+	last_name
+from
+	enclave_concept.concept_set,
+	n3c_admin.user_id_to_orcid_id,
+	n3c_admin.registration
+where concept_set.created_by = user_id_to_orcid_id.unite_user_id
+  and user_id_to_orcid_id.orcid_id = registration.orcid_id
+;
+
 create view enclave_concept.concept_set_project as
 select
 	concept_set.codeset_id,
