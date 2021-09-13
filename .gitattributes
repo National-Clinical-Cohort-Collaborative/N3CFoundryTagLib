@@ -18,6 +18,7 @@ src/main/java/org/cd2h/n3c/Foundry/EnclaveMetricsFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/PhenoDataFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/ProjectRosterFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/SiteStatusFetch.java -text
+src/main/java/org/cd2h/n3c/Foundry/UserBindingFetch.java -text
 src/main/java/org/cd2h/n3c/Jira/ExternalDatasetRequestFetch.java -text
 src/main/java/org/cd2h/n3c/util/APIRequest.java -text
 src/main/java/org/cd2h/n3c/util/HttpPostMultipart.java -text
