@@ -30,31 +30,9 @@ public class UserBindingFetch {
 		conn.setSchema("n3c_maps");
 
 		List<?> contents = APIRequest.fetchCSVFile(prop_file, prop_file.getProperty("user.binding"));
-		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("user.binding"));
-		JSONArray array = result.getJSONArray("values");
-		for (int i = 0; i < array.length(); i++) {
-			JSONObject element = array.getJSONObject(i);
-			String name = element.getString("name");
-			if (name.equals("Copy Approved Downloads"))
-				continue;
-			logger.info("name: " + name);
-			String rid = element.getString("rid");
-			logger.info("\trid:  " + rid);
-			process(name, rid);
-		}
-	}
-
-	static void process(String  enclaveTableName, String fileID) throws IOException, SQLException {
-		String tableName = enclaveTableName;
-		if (tableName.startsWith("[CC] ") || tableName.startsWith("[CC[ "))
-			tableName = tableName.substring(5);
-		if (tableName.startsWith("[CC Export] "))
-			tableName = tableName.substring(12);
-		logger.info("table name: " + tableName + "\tfile ID: " + fileID);
-		List<?> contents = APIRequest.fetchCSVFile(prop_file, fileID);
 		attributes = CohortDataFetch.processLabels(contents);
 		CohortDataFetch.setTypes(attributes, contents);
-		storeData(CohortDataFetch.generateSQLName(tableName), attributes, contents);
+		storeData(CohortDataFetch.generateSQLName("user_binding"), attributes, contents);
 	}
 
 	@SuppressWarnings("deprecation")
