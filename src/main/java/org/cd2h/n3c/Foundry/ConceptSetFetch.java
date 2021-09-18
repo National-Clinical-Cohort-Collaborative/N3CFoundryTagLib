@@ -3,6 +3,7 @@ package org.cd2h.n3c.Foundry;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.cd2h.n3c.util.APIRequest;
 import org.cd2h.n3c.util.LocalProperties;
 import org.cd2h.n3c.util.PropertyLoader;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ConceptSetFetch {
@@ -47,6 +49,29 @@ public class ConceptSetFetch {
 				process(name,rid);
 			}
 		}
+		
+		PreparedStatement stmt = conn.prepareStatement("select codeset_id,atlas_json_resource_url from code_sets where atlas_json is null and atlas_json_resource_url is not null");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			String resourceURL = rs.getString(2);
+			try {
+				JSONObject atlas = APIRequest.fetchCompassJSONObject("https://unite.nih.gov/blobster/api/salt/" + resourceURL + "/token");
+				logger.info("id: " + id + "\turl" + resourceURL);
+				logger.info(atlas.toString(3));
+				
+				PreparedStatement update = conn.prepareStatement("update code_sets set atlas_json = ? where codeset_id = ?");
+				update.setString(1, atlas.toString(3));
+				update.setInt(2, id);
+				update.execute();
+				update.close();
+			} catch (JSONException e) {
+				logger.error("error retrieving JSON for id");
+			} catch (IOException e) {
+				logger.error("error retrieving JSON for id");
+			}
+		}
+		stmt.close();
 	}
 
 	static void process(String  enclaveTableName, String fileID) throws IOException, SQLException {

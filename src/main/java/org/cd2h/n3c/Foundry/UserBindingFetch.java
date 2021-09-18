@@ -27,7 +27,7 @@ public class UserBindingFetch {
 		PropertyConfigurator.configure(args[0]);
 		prop_file = PropertyLoader.loadProperties("n3c_foundry");
 		conn = APIRequest.getConnection(prop_file);
-		conn.setSchema("n3c_maps");
+		conn.setSchema(prop_file.getProperty("jdbc.schema"));
 
 		List<?> contents = APIRequest.fetchCSVFile(prop_file, prop_file.getProperty("user.binding"));
 		attributes = CohortDataFetch.processLabels(contents);
