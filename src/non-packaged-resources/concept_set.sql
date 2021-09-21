@@ -54,13 +54,18 @@ create view enclave_concept.concept_set_display as
 select
 	concept_set.*,
 	first_name,
-	last_name
+	last_name,
+	name
 from
-	enclave_concept.concept_set,
-	n3c_admin.user_binding,
-	n3c_admin.registration
-where concept_set.created_by = user_binding.unite_user_id
-  and user_binding.orcid_id = registration.orcid_id
+	enclave_concept.concept_set
+	left outer join (select * from
+		n3c_admin.user_binding,
+		n3c_admin.registration
+		where user_binding.orcid_id = registration.orcid_id) as foo
+on concept_set.created_by = foo.unite_user_id
+	left outer join
+		n3c_admin.user_binding_fix
+on concept_set.created_by = user_binding_fix.unite_user_id
 ;
 
 create view enclave_concept.concept_set_project as

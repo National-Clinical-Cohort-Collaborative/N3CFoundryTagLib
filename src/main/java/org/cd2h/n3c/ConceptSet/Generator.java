@@ -68,12 +68,12 @@ public class Generator {
 				+ "					update_message,"
 				+ "					provisional_approval_date,"
 				+ "					release_name,"
-				+ "					created_by,"
+				+ "					coalesce(name, first_name||' '||last_name) as author,"
 				+ "					limitations,"
 				+ "					issues,"
 				+ "					provenance,"
 				+ "					json"
-				+ "				from enclave_concept.concept_set");
+				+ "				from enclave_concept.concept_set_display");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
 			count++;
