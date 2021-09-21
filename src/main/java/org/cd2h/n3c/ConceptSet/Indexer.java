@@ -61,7 +61,7 @@ public class Indexer {
 	@SuppressWarnings("deprecation")
 	static void indexConceptSets(IndexWriter indexWriter, FacetFields facetFields) throws SQLException, IOException {
 		int count = 0;
-		PreparedStatement stmt = conn.prepareStatement("select codeset_id,alias from enclave_concept.concept_set where alias is not null");
+		PreparedStatement stmt = conn.prepareStatement("select codeset_id,alias,first_name,last_name,name from enclave_concept.concept_set_display where alias is not null");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
 			count++;
@@ -70,6 +70,13 @@ public class Indexer {
 			String name = rs.getString(2);
 			logger.info("id: " + id + "\tname: " + name);
 			
+			String first_name = rs.getString(3);
+			String last_name = rs.getString(4);
+			String author = rs.getString(5);
+			
+			if (author == null)
+				author = first_name + " " + last_name;
+			
 		    Document theDocument = new Document();
 		    List<CategoryPath> paths = new ArrayList<CategoryPath>();
 		    
@@ -77,6 +84,7 @@ public class Indexer {
 			theDocument.add(new Field("content", id+" ", Field.Store.NO, Field.Index.ANALYZED));
 			theDocument.add(new Field("label", name, Field.Store.YES, Field.Index.NOT_ANALYZED));
 			theDocument.add(new Field("content", name+" ", Field.Store.NO, Field.Index.ANALYZED));
+			paths.add(new CategoryPath("Author/"+author, '/'));
 
 		    PreparedStatement substmt = conn.prepareStatement("select domain_id,concept_code,concept_name,concept_class_id from enclave_concept.code_set_concept where not is_excluded and codeset_id = ?");
 			substmt.setInt(1, id);
