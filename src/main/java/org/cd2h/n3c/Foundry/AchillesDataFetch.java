@@ -7,8 +7,6 @@ import java.util.List;
 import org.apache.log4j.PropertyConfigurator;
 import org.cd2h.n3c.util.APIRequest;
 import org.cd2h.n3c.util.PropertyLoader;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public class AchillesDataFetch extends CohortDataFetch {
 
@@ -19,14 +17,20 @@ public class AchillesDataFetch extends CohortDataFetch {
 		conn.setSchema("enclave_data");
 		initializeReserveHash();
 		
+		logger.info("fetching achilles_results_dist...");
 		List<?> contents = APIRequest.fetchViewCSVFile("ri.foundry.main.dataset.e3b24de0-bbcf-4bd8-ad85-0be114fd6f68");
+		logger.info("\tanalyzing...");
 		attributes = processLabels(contents);
 		setTypes(attributes, contents);
-		storeData(generateSQLName("achilles_result_dist"), attributes, contents);
+		logger.info("\tstoring...");
+		storeData(generateSQLName("achilles_results_dist"), attributes, contents);
 
+		logger.info("fetching achilles_results...");
 		contents = APIRequest.fetchViewCSVFile("ri.foundry.main.dataset.416ba052-cd46-41e1-aa2e-9b709c45a938");
+		logger.info("\tanalyzing...");
 		attributes = processLabels(contents);
 		setTypes(attributes, contents);
+		logger.info("\tstoring...");
 		storeData(generateSQLName("achilles_results"), attributes, contents);
 
 		conn.close();
