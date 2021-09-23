@@ -139,6 +139,17 @@ public class APIRequest {
 		// configure the connection
 		URL uri = new URL("https://unite.nih.gov/foundry-data-proxy/api/dataproxy/datasets/" + datasetRid
 				+ "/branches/master/csv?includeColumnNames=true");
+		return fetchCSVFile(datasetRid, uri);
+	}
+	
+	public static List<?> fetchViewCSVFile(String datasetRid) throws IOException {
+		// configure the connection
+		URL uri = new URL("https://unite.nih.gov/foundry-data-proxy/api/dataproxy/datasets/" + datasetRid
+				+ "/views/master/results.csv");
+		return fetchCSVFile(datasetRid, uri);
+	}
+	
+	public static List<?> fetchCSVFile(String datasetRid, URL uri) throws IOException {
 		logger.debug("url: " + uri);
 		logger.debug("token: " + prop_file.getProperty("api.token"));
 		HttpURLConnection con = (HttpURLConnection) uri.openConnection();

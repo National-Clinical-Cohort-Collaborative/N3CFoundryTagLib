@@ -2,6 +2,7 @@ package org.cd2h.n3c.Foundry;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.apache.log4j.PropertyConfigurator;
 import org.cd2h.n3c.util.APIRequest;
@@ -18,16 +19,15 @@ public class AchillesDataFetch extends CohortDataFetch {
 		conn.setSchema("enclave_data");
 		initializeReserveHash();
 		
-		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("achilles.directory"));
-		JSONArray  array  = result.getJSONArray("values");
-		for (int  i = 0; i < array.length();  i++)  {
-			JSONObject element  = array.getJSONObject(i);
-			String name  = element.getString("name");
-			logger.info("name: " +  name);
-			String rid  = element.getString("rid");
-			logger.info("\trid:  " +  rid);
-			process(name, rid);
-		}
+		List<?> contents = APIRequest.fetchViewCSVFile("ri.foundry.main.dataset.e3b24de0-bbcf-4bd8-ad85-0be114fd6f68");
+		attributes = processLabels(contents);
+		setTypes(attributes, contents);
+		storeData(generateSQLName("achilles_result_dist"), attributes, contents);
+
+		contents = APIRequest.fetchViewCSVFile("ri.foundry.main.dataset.416ba052-cd46-41e1-aa2e-9b709c45a938");
+		attributes = processLabels(contents);
+		setTypes(attributes, contents);
+		storeData(generateSQLName("achilles_results"), attributes, contents);
 
 		conn.close();
 	}
