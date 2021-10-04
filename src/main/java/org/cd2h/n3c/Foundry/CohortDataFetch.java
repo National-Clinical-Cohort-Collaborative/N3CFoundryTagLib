@@ -55,8 +55,15 @@ public class CohortDataFetch {
 		if (tableName.startsWith("[CC Export] "))
 			tableName = tableName.substring(12);
 		logger.info("table name: " + tableName + "\tfile ID: " + fileID);
-		List<?> contents = APIRequest.fetchCSVFile(prop_file, fileID);
-		attributes = processLabels(contents);
+		List<?> contents = null;
+		try {
+			contents = APIRequest.fetchCSVFile(prop_file, fileID);
+			attributes = processLabels(contents);
+		} catch (NullPointerException e) {
+			logger.error("falling back to view fetch...");
+			contents = APIRequest.fetchViewCSVFile(fileID);
+			attributes = processLabels(contents);
+		}
 		setTypes(attributes, contents);
 		storeData(generateSQLName(tableName), attributes, contents);
 	}
