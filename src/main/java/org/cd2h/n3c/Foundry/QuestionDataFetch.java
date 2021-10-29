@@ -27,6 +27,9 @@ public class QuestionDataFetch extends CohortDataFetch {
 		JSONObject result3 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory3"));
 		process(result3);
 
+		JSONObject result4 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory4"));
+		process(result4);
+
 		conn.close();
 	}
 	
