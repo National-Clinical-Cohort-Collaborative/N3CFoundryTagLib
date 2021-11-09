@@ -9,7 +9,7 @@ import org.cd2h.n3c.util.PropertyLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class QuestionDataFetch extends CohortDataFetch {
+public class PedsDataFetch extends CohortDataFetch {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
 		PropertyConfigurator.configure(args[0]);
@@ -18,20 +18,8 @@ public class QuestionDataFetch extends CohortDataFetch {
 		conn.setSchema("n3c_questions");
 		initializeReserveHash();
 		
-//		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("question.directory"));
-//		process(result);
-//
-//		JSONObject result2 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory2"));
-//		process(result2);
-//
-//		JSONObject result3 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory3"));
-//		process(result3);
-//
-//		JSONObject result4 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory4"));
-//		process(result4);
-
-		JSONObject result5 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory5"));
-		process(result5);
+		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("peds.dashboard"));
+		process(result);
 
 		conn.close();
 	}
@@ -46,7 +34,10 @@ public class QuestionDataFetch extends CohortDataFetch {
 				continue;
 			String rid  = element.getString("rid");
 			logger.info("\trid:  " +  rid);
-			process(name, rid);
+//			String contents = APIRequest.fetchCompassFile(name, rid);
+			if (name.equals("Simple ggplot ggsave"))
+				APIRequest.fetchCompassFile("myexample.svg", rid, "/Users/eichmann/Documents/Components/workspace/n3c-pediatrics-dashboard/WebContent/downloads/");
+
 		}
 	}
 }

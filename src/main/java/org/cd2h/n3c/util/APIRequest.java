@@ -2,8 +2,12 @@ package org.cd2h.n3c.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -15,6 +19,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -107,6 +112,67 @@ public class APIRequest {
 		}
 	}
 
+	public static JSONArray fetchCompassJSONArray(String request) throws IOException {
+		// configure the connection
+		URL uri = new URL(request);
+		logger.debug("url: " + uri);
+		logger.debug("token: " + prop_file.getProperty("api.token"));
+		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+		con.setRequestMethod("GET"); // type: POST, PUT, DELETE, GET
+		if (prop_file.getProperty("api.token") != null)
+			con.setRequestProperty("Authorization", "Bearer " + prop_file.getProperty("api.token"));
+
+		// pull down the response JSON
+		con.connect();
+		logger.debug("response:" + con.getResponseCode());
+		if (con.getResponseCode() >= 400) {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+			JSONObject results = new JSONObject(new JSONTokener(in));
+			logger.error("error:\n" + results.toString(3));
+			in.close();
+			return null;
+		} else {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			JSONArray results = new JSONArray(new JSONTokener(in));
+			logger.debug("results:\n" + results.toString(3));
+			in.close();
+			return results;
+		}
+	}
+
+	public static String fetchCompassFile(String name, String datasetRid, String path) throws IOException {
+		// configure the connection
+		URL uri = new URL("https://unite.nih.gov/foundry-data-proxy/api/dataproxy/datasets/" + datasetRid + "/views/master/" + name);
+		logger.info("url: " + uri);
+		logger.debug("token: " + prop_file.getProperty("api.token"));
+		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+		con.setRequestMethod("GET"); // type: POST, PUT, DELETE, GET
+		if (prop_file.getProperty("api.token") != null)
+			con.setRequestProperty("Authorization", "Bearer " + prop_file.getProperty("api.token"));
+
+		// pull down the response JSON
+		con.connect();
+		logger.debug("response:" + con.getResponseCode());
+		if (con.getResponseCode() >= 400) {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+			JSONObject results = new JSONObject(new JSONTokener(in));
+			logger.error("error:\n" + results.toString(3));
+			in.close();
+			return null;
+		} else {
+			BufferedWriter out = new BufferedWriter(new FileWriter(path + name));
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			String buffer = null;
+			while ((buffer = in.readLine()) != null) {
+				logger.info(buffer);
+				out.write(buffer + "\n");
+			}
+			in.close();
+			out.close();
+			return buffer;
+		}
+	}
+
 	// Compass documentation:
 	// https://unite.nih.gov/workspace/documentation/developer/api/compass/services/CompassService/endpoints/getChildren
 
@@ -122,6 +188,13 @@ public class APIRequest {
 	public static JSONObject fetchDirectory(String directoryID) throws IOException {
 		logger.info("directory ID: " + directoryID);
 		JSONObject response = fetchCompassJSONObject("https://unite.nih.gov/compass/api/folders/" + directoryID + "/children");
+		logger.info(response.toString(3));
+		return response;
+	}
+
+	public static JSONArray fetchDirectory2(String directoryID) throws IOException {
+		logger.info("directory ID: " + directoryID);
+		JSONArray response = fetchCompassJSONArray("https://unite.nih.gov/workspace/data-integration/dataset/details/" + directoryID + "/master");
 		logger.info(response.toString(3));
 		return response;
 	}
