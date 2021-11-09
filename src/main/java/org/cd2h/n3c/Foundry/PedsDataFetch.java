@@ -15,12 +15,13 @@ public class PedsDataFetch extends CohortDataFetch {
 		PropertyConfigurator.configure(args[0]);
 		prop_file = PropertyLoader.loadProperties("n3c_foundry");
 		conn = APIRequest.getConnection(prop_file);
-		conn.setSchema("n3c_questions");
+		conn.setSchema("n3c_peds");
 		initializeReserveHash();
 		
-		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("peds.dashboard"));
-		process(result);
+//		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("peds.dashboard"));
+//		process(result);
 
+		process("hosptialized peds by month clamped over 20", prop_file.getProperty("peds.table"));
 		conn.close();
 	}
 	
