@@ -18,17 +18,17 @@ public class QuestionDataFetch extends CohortDataFetch {
 		conn.setSchema("n3c_questions");
 		initializeReserveHash();
 		
-//		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("question.directory"));
-//		process(result);
-//
+		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("question.directory"));
+		process(result);
+
 //		JSONObject result2 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory2"));
 //		process(result2);
-//
-//		JSONObject result3 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory3"));
-//		process(result3);
-//
-//		JSONObject result4 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory4"));
-//		process(result4);
+
+		JSONObject result3 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory3"));
+		process(result3);
+
+		JSONObject result4 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory4"));
+		process(result4);
 
 		JSONObject result5 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory5"));
 		process(result5);
