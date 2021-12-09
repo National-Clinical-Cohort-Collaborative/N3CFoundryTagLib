@@ -274,7 +274,7 @@ public class APIRequest {
 		props.setProperty("user", prop_file.getProperty("jdbc.user"));
 		props.setProperty("password", prop_file.getProperty("jdbc.password"));
 		Connection conn = DriverManager.getConnection(prop_file.getProperty("jdbc.url"), props);
-		conn.setAutoCommit(true);
+		conn.setAutoCommit(prop_file.getProperty("jdbc.autoCommit") == null ? true : prop_file.getBooleanProperty("jdbc.autoCommit"));
 		return conn;
 	}
 

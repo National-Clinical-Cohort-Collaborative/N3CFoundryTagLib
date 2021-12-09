@@ -171,6 +171,7 @@ public class CohortDataFetch {
 		insertBuffer.append(")");
 		logger.debug("insert command: " + insertBuffer);
 
+		int count = 0;
 		PreparedStatement insertStmt = conn.prepareStatement(insertBuffer.toString());
 		Iterator<?> iterator = contents.iterator();
 		iterator.next();
@@ -194,7 +195,11 @@ public class CohortDataFetch {
 					insertStmt.setString(i + 1, contentArray[i].replace(" / ", "\n").trim());
 			}
 			insertStmt.executeUpdate();
+			if (!conn.getAutoCommit() && ++count % 100 == 0)
+				conn.commit();
 		}
+		if (!conn.getAutoCommit())
+			conn.commit();
 		insertStmt.close();
 	}
 
