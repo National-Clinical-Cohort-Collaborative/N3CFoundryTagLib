@@ -1,6 +1,8 @@
 package org.cd2h.n3c.Foundry;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.log4j.PropertyConfigurator;
@@ -18,27 +20,13 @@ public class QuestionDataFetch extends CohortDataFetch {
 		conn.setSchema("n3c_questions");
 		initializeReserveHash();
 		
-		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("question.directory"));
-		process(result);
-
-//		JSONObject result2 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory2"));
-//		process(result2);
-
-		JSONObject result3 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory3"));
-		process(result3);
-
-		JSONObject result4 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory4"));
-		process(result4);
-
-		JSONObject result5 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory5"));
-		process(result5);
-
-		JSONObject result6 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory6"));
-		process(result6);
-
-		JSONObject result7 = APIRequest.fetchDirectory(prop_file.getProperty("question.directory7"));
-		process(result7);
-
+		PreparedStatement stmt = conn.prepareStatement("select rid from palantir.tiger_team where active");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			JSONObject result = APIRequest.fetchDirectory(rs.getString(1));
+			process(result);
+		}
+		
 		conn.close();
 	}
 	
