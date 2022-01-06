@@ -188,7 +188,7 @@ public class APIRequest {
 	public static JSONObject fetchDirectory(String directoryID) throws IOException {
 		logger.info("directory ID: " + directoryID);
 		JSONObject response = fetchCompassJSONObject("https://unite.nih.gov/compass/api/folders/" + directoryID + "/children");
-		logger.info(response.toString(3));
+		logger.debug(response.toString(3));
 		return response;
 	}
 
