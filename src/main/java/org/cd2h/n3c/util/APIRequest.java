@@ -195,7 +195,7 @@ public class APIRequest {
 	public static JSONArray fetchDirectory2(String directoryID) throws IOException {
 		logger.info("directory ID: " + directoryID);
 		JSONArray response = fetchCompassJSONArray("https://unite.nih.gov/workspace/data-integration/dataset/details/" + directoryID + "/master");
-		logger.info(response.toString(3));
+		logger.debug(response.toString(3));
 		return response;
 	}
 
