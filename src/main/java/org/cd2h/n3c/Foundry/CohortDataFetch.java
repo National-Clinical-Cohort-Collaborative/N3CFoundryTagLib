@@ -49,6 +49,10 @@ public class CohortDataFetch {
 	}
 	
 	static void process(String  enclaveTableName, String fileID) throws IOException, SQLException {
+		process(enclaveTableName, fileID, true);
+	}
+	
+	static void process(String  enclaveTableName, String fileID, boolean truncate) throws IOException, SQLException {
 		String tableName = enclaveTableName;
 		if (tableName.startsWith("[CC] ") || tableName.startsWith("[CC[ "))
 			tableName = tableName.substring(5);
@@ -65,7 +69,7 @@ public class CohortDataFetch {
 			attributes = processLabels(contents);
 		}
 		setTypes(attributes, contents);
-		storeData(generateSQLName(tableName), attributes, contents);
+		storeData(generateSQLName(tableName), attributes, contents, truncate);
 	}
 
 	static Attribute[] processLabels(List<?> contents) {
@@ -152,7 +156,7 @@ public class CohortDataFetch {
 	}
 
 	@SuppressWarnings("deprecation")
-	static void storeData(String tableName, Attribute[] attributes, List<?> contents) throws SQLException {
+	static void storeData(String tableName, Attribute[] attributes, List<?> contents, boolean truncate) throws SQLException {
 		StringBuffer createBuffer = new StringBuffer("create table if not exists " + tableName + "(");
 		StringBuffer insertBuffer = new StringBuffer("insert into " + tableName + " values (");
 
@@ -162,11 +166,16 @@ public class CohortDataFetch {
 		}
 
 		createBuffer.append(")");
+
+		if (!truncate)
+			simpleStmt("drop table if exists " + tableName);
+
 		logger.debug("create command: " + createBuffer);
 		if (load)
 			simpleStmt(createBuffer.toString());
 		
-		simpleStmt("truncate table " + tableName);
+		if (truncate)
+			simpleStmt("truncate table " + tableName);
 
 		insertBuffer.append(")");
 		logger.debug("insert command: " + insertBuffer);

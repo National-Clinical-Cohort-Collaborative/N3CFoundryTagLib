@@ -40,7 +40,7 @@ public class QuestionDataFetch extends CohortDataFetch {
 				continue;
 			String rid  = element.getString("rid");
 			logger.info("\trid:  " +  rid);
-			process(name, rid);
+			process(name, rid, false);
 		}
 	}
 }
