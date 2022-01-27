@@ -40,7 +40,10 @@ public class QuestionDataFetch extends CohortDataFetch {
 				continue;
 			String rid  = element.getString("rid");
 			logger.info("\trid:  " +  rid);
-			process(name, rid, false);
+			if (name.equals("final_results_with_gender_censored"))
+				process(name, rid, true);
+			else
+				process(name, rid, false);
 		}
 	}
 }
