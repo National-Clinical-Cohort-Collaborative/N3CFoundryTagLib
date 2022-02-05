@@ -22,13 +22,18 @@ import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfDocumentInfo;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.action.PdfAction;
+import com.itextpdf.kernel.pdf.annot.PdfLinkAnnotation;
+import com.itextpdf.kernel.pdf.canvas.parser.listener.TextChunk;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Link;
 import com.itextpdf.layout.element.List;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
@@ -111,17 +116,20 @@ public class Generator {
 			document = new Document(pdfDoc, PageSize.LETTER);
 			
 			Paragraph lead = new Paragraph();
-			Image image = new Image(ImageDataFactory.create("/Users/eichmann/Documents/Components/workspace/N3CFoundryTagLib/src/main/resources/images/n3c_logo.png"));
+			Image image = new Image(ImageDataFactory.create("/Users/eichmann/Documents/Components/workspace/N3CFoundryTagLib/src/main/resources/images/n3c_logo_narrow.png"));
 			image.setHeight(64);
-			image.setWidth(64);
+//			image.setWidth(64);
 			lead.add(image);
-			Text header = new Text(alias);
-			header.setFontSize(24);
-			header.setBold();
-			lead.add(header);
 			document.add(lead);
+			
+			Paragraph head = new Paragraph();
+			Text header = new Text("N3C Code Set: " + alias);
+			header.setFontSize(18);
+			header.setBold();
+			head.add(header);
+			head.setMarginBottom(25);
+			document.add(head);
 
-			addItem("Code Set Name", alias);
 			addItem("Code Set ID", id+"");
 			addItem("Intention", intention);
 			addItem("Version", version);
@@ -147,9 +155,29 @@ public class Generator {
 			addItem("Description", limitations);
 			addItem("Issues", issues);
 			addItem("Provenance", provenance);
+			
+			Paragraph ack = new Paragraph();
+			Text ackLabel = new Text("Acknowledgements: ");
+			ackLabel.setBold();
+			ack.add(ackLabel);
+			Text link = new Text("https://covid.cd2h.org/acknowledgements");
+			ack.add(link);
+			ack.setMarginTop(100);
+			document.add(ack);
+			
+			Paragraph boiler = new Paragraph();
+			Text boilerplate = new Text("This code set was prepared for use with the NCATS N3C Data Enclave "
+					+ "(https://covid.cd2h.org/enclave) and supported by NCATS U24 TR002306. This code set does "
+					+ "not contain any patient data. The enclave itself is made possible by the patients whose "
+					+ "information is included within the data from participating organizations "
+					+ "(https://covid.cd2h.org/dtas) and the organizations and scientists (https://covid.cd2h.org/duas) who "
+					+ "have contributed to the on-going development of this community resource "
+					+ "(https://doi.org/10.1093/jamia/ocaa196).");
+			boiler.add(boilerplate);
+			document.add(boiler);
 
 			document.add(new AreaBreak());
-			addItem("Logic Hierarchy", "");
+			addItem("Logic Expression", "");
 
 			// Creating a table
 			Table table = new Table(8).useAllAvailableWidth();
@@ -226,6 +254,15 @@ public class Generator {
 		stmt.close();
 		
 		logger.info("concepts indexed: " + count);
+	}
+	
+	static Link generateLink(String anchor, String URI) {
+		Rectangle rect = new Rectangle(0, 0); 
+		PdfLinkAnnotation annotation = new PdfLinkAnnotation(rect); 
+		PdfAction action = PdfAction.createURI(URI); 
+		annotation.setAction(action); 
+		Link link = new Link(anchor,annotation);
+		return link;
 	}
 	
 	static void addItem(String label, String value) {
