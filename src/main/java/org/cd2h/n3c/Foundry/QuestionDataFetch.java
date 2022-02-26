@@ -23,14 +23,15 @@ public class QuestionDataFetch extends CohortDataFetch {
 		PreparedStatement stmt = conn.prepareStatement("select rid from palantir.tiger_team where active");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
-			JSONObject result = APIRequest.fetchDirectory(rs.getString(1));
-			process(result);
+			String compass = rs.getString(1);
+			JSONObject result = APIRequest.fetchDirectory(compass);
+			process(compass,result);
 		}
 		
 		conn.close();
 	}
 	
-	static void process(JSONObject result) throws IOException, SQLException {
+	static void process(String compass, JSONObject result) throws IOException, SQLException {
 		JSONArray  array  = result.getJSONArray("values");
 		for (int  i = 0; i < array.length();  i++)  {
 			JSONObject element  = array.getJSONObject(i);
@@ -44,6 +45,20 @@ public class QuestionDataFetch extends CohortDataFetch {
 				process(name, rid, true);
 			else
 				process(name, rid, false);
+			
+			PreparedStatement stmt = conn.prepareStatement("update palantir.tiger_team_file set updated = now() where rid = ? and file = ?");
+			stmt.setString(1, compass);
+			stmt.setString(2, name);
+			int matched = stmt.executeUpdate();
+			stmt.close();
+			
+			if (matched == 0) {
+				stmt = conn.prepareStatement("insert into palantir.tiger_team_file values(?, ?, now())");
+				stmt.setString(1, compass);
+				stmt.setString(2, name);
+				stmt.executeUpdate();
+				stmt.close();
+			}
 		}
 	}
 }
