@@ -22,6 +22,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.cd2h.n3c.util.LocalProperties;
 import org.cd2h.n3c.util.PropertyLoader;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -48,7 +49,29 @@ public class Publisher {
 		else
 			token = zenodo_props.getProperty("access_token");
 		
-		JSONObject creation = newDeposition();
+		deposit();
+	}
+	
+	static void deposit() throws SQLException, IOException {
+		PreparedStatement stmt = conn.prepareStatement("select distinct codeset_id, alias from enclave_concept.concept_set where provisional_approval_date is not null and not exists (select codeset_id from enclave_concept.zenodo_deposit_raw where concept_set.codeset_id=zenodo_deposit_raw.codeset_id)");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			String alias = rs.getString(2);
+			logger.info("depositing: " + id + " : " + alias);
+			
+			JSONObject creation = newDeposition(id, alias);
+			PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_deposit_raw(codeset_id,raw) values(?,?::jsonb)");
+			depstmt.setInt(1, id);
+			depstmt.setString(2, creation.toString(3));
+			depstmt.execute();
+			depstmt.close();
+		}
+		stmt.close();
+	}
+	
+	static void original() throws IOException, JSONException, SQLException, InterruptedException {
+		JSONObject creation = newDeposition(0,"");
 		PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_deposit_raw values(?::jsonb)");
 		depstmt.setString(1, creation.toString(3));
 		depstmt.execute();
@@ -106,7 +129,7 @@ public class Publisher {
 		}
 	}
 		
-	static JSONObject newDeposition() throws IOException {
+	static JSONObject newDeposition(int id, String alias) throws IOException {
 		// configure the connection
 		URL uri = new URL("https://" + siteName + "/api/deposit/depositions");
 		logger.info("url: " + uri);
@@ -118,8 +141,8 @@ public class Publisher {
 		con.setDoInput(true);
 		
 		JSONObject metadata = new JSONObject();
-		metadata.accumulate("title", "N3C Concept Sets");
-		metadata.accumulate("description", "Lists of concepts from the standardized vocabulary that taken together describe a topic of interest for a study.");
+		metadata.accumulate("title", "N3C Concept Set - " + id +" (" + alias + ")");
+		metadata.accumulate("description", "A list of concepts from the standardized vocabulary that taken together describe a topic of interest for a study.");
 		metadata.accumulate("upload_type", "publication");
 		metadata.accumulate("publication_type", "workingpaper");
 		JSONObject payload = new JSONObject();
