@@ -21,10 +21,11 @@ public class QuestionDataFetch extends CohortDataFetch {
 		initializeReserveHash();
 		
 		PreparedStatement stmt = null;
-		
-		if (args.length > 1 && args[1].equals("new"))
+
+		if (args.length > 2 && args[2].equals("new")) {
+		    logger.info("processing only new feeds!");
 			stmt = conn.prepareStatement("select rid from palantir.tiger_team where active and rid not in (select rid from palantir.tiger_team_file)");
-		else
+		} else
 			stmt = conn.prepareStatement("select rid from palantir.tiger_team where active");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
@@ -60,7 +61,7 @@ public class QuestionDataFetch extends CohortDataFetch {
 			if (matched == 0) {
 				stmt = conn.prepareStatement("insert into palantir.tiger_team_file values(?, ?, now())");
 				stmt.setString(1, compass);
-				stmt.setString(2, name);
+				stmt.setString(2, generateSQLName(name));
 				stmt.executeUpdate();
 				stmt.close();
 			}
