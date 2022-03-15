@@ -20,7 +20,12 @@ public class QuestionDataFetch extends CohortDataFetch {
 		conn.setSchema("n3c_questions");
 		initializeReserveHash();
 		
-		PreparedStatement stmt = conn.prepareStatement("select rid from palantir.tiger_team where active");
+		PreparedStatement stmt = null;
+		
+		if (args.length > 1 && args[1].equals("new"))
+			stmt = conn.prepareStatement("select rid from palantir.tiger_team where active and rid not in (select rid from palantir.tiger_team_file)");
+		else
+			stmt = conn.prepareStatement("select rid from palantir.tiger_team where active");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
 			String compass = rs.getString(1);
