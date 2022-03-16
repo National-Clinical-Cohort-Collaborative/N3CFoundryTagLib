@@ -241,11 +241,19 @@ public class CohortDataFetch {
 	}
 
 	static String generateSQLName(String attribute) {
+		return generateSQLName(attribute,false);
+	}
+
+	static String generateSQLName(String attribute, boolean simpleName) {
 		if (attribute == null || attribute.length() == 0)
 			return "";
 		String attributeBase = attribute.trim().replace("\uFEFF", "");
 		attributeBase = (Character.isJavaIdentifierStart(attributeBase.charAt(0)) ? "" : "x___")
 				+ attributeBase.replaceAll("[^A-Za-z0-9_]", "_");
+		
+		if (simpleName)
+			return attributeBase;
+		
 		if (reservedHash.containsKey(attributeBase.toUpperCase()))
 			attributeBase = "x__" + attributeBase;
 		if (attributeBase.length() > 60)
