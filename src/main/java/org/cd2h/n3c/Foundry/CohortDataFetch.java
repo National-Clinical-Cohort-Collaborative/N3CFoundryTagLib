@@ -252,7 +252,7 @@ public class CohortDataFetch {
 				+ attributeBase.replaceAll("[^A-Za-z0-9_]", "_");
 		
 		if (simpleName)
-			return attributeBase;
+			return attributeBase.toLowerCase();
 		
 		if (reservedHash.containsKey(attributeBase.toUpperCase()))
 			attributeBase = "x__" + attributeBase;
