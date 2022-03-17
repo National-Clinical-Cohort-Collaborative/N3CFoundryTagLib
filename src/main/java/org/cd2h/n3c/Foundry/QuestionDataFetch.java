@@ -61,7 +61,7 @@ public class QuestionDataFetch extends CohortDataFetch {
 			if (matched == 0) {
 				stmt = conn.prepareStatement("insert into palantir.tiger_team_file values(?, ?, now())");
 				stmt.setString(1, compass);
-				stmt.setString(2, generateSQLName(name));
+				stmt.setString(2, generateSQLName(name, true));
 				stmt.executeUpdate();
 				stmt.close();
 			}
