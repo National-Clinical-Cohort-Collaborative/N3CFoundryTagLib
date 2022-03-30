@@ -72,6 +72,18 @@ public class ExternalDatasetRequestFetch {
 	    String citation_name = null;
 	    String citation_doi = null;
 	    String citation_url = null;
+	    String release_frequency = null;
+	    String comment = null;
+	    String doi = null;
+	    String standards_used = null;
+	    String citation_pmid = null;
+	    String citation_citetext = null;
+	    String author_alternatename = null;
+	    String measurementtechnique = null;
+	    String funding_name = null;
+	    String funding_identifier = null;
+	    String funding_url = null;
+	    String funding_funder_name = null;
 
 	    logger.info("id: " + id);
 	    logger.info("\tkey: " + key);
@@ -93,7 +105,7 @@ public class ExternalDatasetRequestFetch {
 			logger.debug("bullet: " + bullet.toString(3));
 			JSONArray bulletContent = bullet.getJSONArray("content").getJSONObject(0).getJSONArray("content");
 			String label = bulletContent.getJSONObject(0).getString("text").trim();
-			String value = bulletContent.getJSONObject(1).getString("text").trim();
+			String value = bulletContent.getJSONObject(1).optString("text").trim();
 			logger.debug("label: " + label + "\tvalue: " + value);
 			switch (label) {
 			case "name:":
@@ -156,6 +168,42 @@ public class ExternalDatasetRequestFetch {
 			case "citation.url:":
 			    citation_url = value;
 			    break;
+			case "release_frequency:":
+				release_frequency = value;
+			    break;
+			case "comment:":
+			    comment = value;
+			    break;
+			case "doi:":
+			    doi = value;
+			    break;
+			case "standards_used:":
+				standards_used = value;
+			    break;
+			case "citation.pmid:":
+				citation_pmid = value;
+			    break;
+			case "citation.citeText:":
+				citation_citetext = value;
+			    break;
+			case "author.alternateName:":
+				author_alternatename = value;
+			    break;
+			case "measurementTechnique:":
+				measurementtechnique = value;
+			    break;
+			case "funding.name:":
+				funding_name = value;
+			    break;
+			case "funding.identifier:":
+				funding_identifier = value;
+			    break;
+			case "funding.url:":
+				funding_url = value;
+			    break;
+			case "funding.funder.name:":
+				funding_funder_name = value;
+			    break;
 			default:
 			    logger.error(">>>>>>> unknown label: " + label + "\tvalue: " + value);
 			}
@@ -171,7 +219,7 @@ public class ExternalDatasetRequestFetch {
 	    rawStmt.close();
 
 	    int count = 1;
-	    PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_external_dataset values (?::int,?,?,?::timestamp,?::timestamp,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+	    PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_external_dataset values (?::int,?,?,?::timestamp,?::timestamp,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 	    stmt.setString(count++, id);
 	    stmt.setString(count++, key);
 	    stmt.setString(count++, summary);
@@ -198,6 +246,18 @@ public class ExternalDatasetRequestFetch {
 	    stmt.setString(count++, citation_name);
 	    stmt.setString(count++, citation_doi);
 	    stmt.setString(count++, citation_url);
+	    stmt.setString(count++, release_frequency);
+	    stmt.setString(count++, comment);
+	    stmt.setString(count++, doi);
+	    stmt.setString(count++, standards_used);
+	    stmt.setString(count++, citation_pmid);
+	    stmt.setString(count++, citation_citetext);
+	    stmt.setString(count++, author_alternatename);
+	    stmt.setString(count++, measurementtechnique);
+	    stmt.setString(count++, funding_name);
+	    stmt.setString(count++, funding_identifier);
+	    stmt.setString(count++, funding_url);
+	    stmt.setString(count++, funding_funder_name);
 	    stmt.executeUpdate();
 	    stmt.close();
 	}
