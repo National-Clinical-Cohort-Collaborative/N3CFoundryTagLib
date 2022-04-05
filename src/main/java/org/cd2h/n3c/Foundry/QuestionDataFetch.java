@@ -54,7 +54,7 @@ public class QuestionDataFetch extends CohortDataFetch {
 			
 			PreparedStatement stmt = conn.prepareStatement("update palantir.tiger_team_file set updated = now() where rid = ? and file = ?");
 			stmt.setString(1, compass);
-			stmt.setString(2, name);
+			stmt.setString(2, generateSQLName(name, true));
 			int matched = stmt.executeUpdate();
 			stmt.close();
 			
