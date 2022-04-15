@@ -65,6 +65,7 @@ public class ConceptSetFetch {
 				update.setInt(2, id);
 				update.execute();
 				update.close();
+				conn.commit();
 			} catch (JSONException e) {
 				logger.error("error retrieving JSON for id");
 			} catch (IOException e) {
@@ -87,6 +88,7 @@ public class ConceptSetFetch {
 		attributes = CohortDataFetch.processLabels(contents);
 		CohortDataFetch.setTypes(attributes, contents);
 		storeData(CohortDataFetch.generateSQLName(tableName), attributes, contents);
+		conn.commit();
 	}
 
 	@SuppressWarnings("deprecation")
