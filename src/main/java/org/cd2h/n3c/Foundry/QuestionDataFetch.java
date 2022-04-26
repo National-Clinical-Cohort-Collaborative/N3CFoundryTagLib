@@ -47,10 +47,11 @@ public class QuestionDataFetch extends CohortDataFetch {
 				continue;
 			String rid  = element.getString("rid");
 			logger.info("\trid:  " +  rid);
-			if (name.equals("final_results_with_gender_censored") || name.equals("icd10_individual_symptom_summary_counts") || name.equals("icd10_individual_symptom_summary_counts_by_symptom"))
-				process(name, rid, true);
-			else
-				process(name, rid, false);
+//			if (name.equals("final_results_with_gender_censored") || name.equals("icd10_individual_symptom_summary_counts") || name.equals("icd10_individual_symptom_summary_counts_by_symptom"))
+//				process(name, rid, true);
+//			else
+//				process(name, rid, false);
+			process(name, rid, true);
 			
 			PreparedStatement stmt = conn.prepareStatement("update palantir.tiger_team_file set updated = now() where rid = ? and file = ?");
 			stmt.setString(1, compass);
