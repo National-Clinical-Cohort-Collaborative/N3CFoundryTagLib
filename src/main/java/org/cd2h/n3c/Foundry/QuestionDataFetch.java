@@ -47,7 +47,7 @@ public class QuestionDataFetch extends CohortDataFetch {
 				continue;
 			String rid  = element.getString("rid");
 			logger.info("\trid:  " +  rid);
-			if (name.equals("final_results_with_gender_censored"))
+			if (name.equals("final_results_with_gender_censored") || name.equals("icd10_individual_symptom_summary_counts") || name.equals("icd10_individual_symptom_summary_counts_by_symptom"))
 				process(name, rid, true);
 			else
 				process(name, rid, false);
