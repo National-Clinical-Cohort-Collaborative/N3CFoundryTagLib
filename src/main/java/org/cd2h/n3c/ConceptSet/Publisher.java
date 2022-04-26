@@ -68,6 +68,7 @@ public class Publisher {
 			depstmt.close();
 		}
 		stmt.close();
+		conn.commit();
 	}
 	
 	static void original() throws IOException, JSONException, SQLException, InterruptedException {

@@ -83,7 +83,18 @@ join
 on (research_project_id= uid)
 ;
 
-create table zenodo_deposit_raw(raw jsonb);
+create table zenodo_deposit_raw(codeset_id int, raw jsonb);
+
+create view zenodo_deposit as
+select
+	codeset_id,
+	(raw->>'id')::int as zenodo_id,
+	raw->>'title' as title,
+	(raw->>'created')::date as created,
+	(raw->>'modified')::date as modified,
+	'https://doi.org/'||(((((raw->>'metadata')::jsonb)->>'prereserve_doi')::jsonb)->>'doi') as doi
+from zenodo_deposit_raw
+;
 
 create table zenodo_file_raw(codeset_id int, raw jsonb);
 
@@ -94,13 +105,4 @@ select
 	(raw->>'updated')::date as updated,
 	((raw->>'links')::jsonb)->>'self' as url
 from zenodo_file_raw
-;
-
-create view zenodo_deposit as
-select
-	(raw->>'id')::int as id,
-	raw->>'title' as title,
-	(raw->>'created')::date as created,
-	(raw->>'modified')::date as modified
-from zenodo_deposit_raw
 ;
