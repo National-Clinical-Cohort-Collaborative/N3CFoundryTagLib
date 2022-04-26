@@ -1,5 +1,6 @@
 package org.cd2h.n3c.ConceptSet;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -100,7 +101,13 @@ public class Generator {
 			if (alias == null)
 				continue;
 
-			PdfWriter writer = new PdfWriter(pathPrefix + id + ".pdf");
+			if (json != null) {
+				FileWriter myWriter = new FileWriter(pathPrefix + id + ".json");
+				myWriter.write(json+ "\n");
+				myWriter.close();
+			}
+
+		    PdfWriter writer = new PdfWriter(pathPrefix + id + ".pdf");
 			PdfDocument pdfDoc = new PdfDocument(writer);
 			font = PdfFontFactory.createFont(fontProgram, PdfEncodings.IDENTITY_H);
 			
@@ -156,6 +163,15 @@ public class Generator {
 			addItem("Issues", issues);
 			addItem("Provenance", provenance);
 			
+			substmt = conn.prepareStatement("select doi from enclave_concept.zenodo_deposit where codeset_id = ?");
+			substmt.setInt(1, id);
+			subrs = substmt.executeQuery();
+			while (subrs.next()) {
+				String doi = subrs.getString(1);
+				addItem("DOI", doi);
+			}
+			substmt.close();
+
 			Paragraph ack = new Paragraph();
 			Text ackLabel = new Text("Acknowledgements: ");
 			ackLabel.setBold();

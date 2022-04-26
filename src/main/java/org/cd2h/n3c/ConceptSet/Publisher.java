@@ -49,10 +49,11 @@ public class Publisher {
 		else
 			token = zenodo_props.getProperty("access_token");
 		
+//		reserve();
 		deposit();
 	}
 	
-	static void deposit() throws SQLException, IOException {
+	static void reserve() throws SQLException, IOException {
 		PreparedStatement stmt = conn.prepareStatement("select distinct codeset_id, alias from enclave_concept.concept_set where provisional_approval_date is not null and not exists (select codeset_id from enclave_concept.zenodo_deposit_raw where concept_set.codeset_id=zenodo_deposit_raw.codeset_id)");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
@@ -71,24 +72,32 @@ public class Publisher {
 		conn.commit();
 	}
 	
-	static void original() throws IOException, JSONException, SQLException, InterruptedException {
-		JSONObject creation = newDeposition(0,"");
-		PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_deposit_raw values(?::jsonb)");
-		depstmt.setString(1, creation.toString(3));
-		depstmt.execute();
-		depstmt.close();
-		
+	static void deposit() throws IOException, JSONException, SQLException, InterruptedException {
 		int count = 0;
-		PreparedStatement stmt = conn.prepareStatement("select distinct codeset_id from enclave_concept.concept_set");
+		PreparedStatement stmt = conn.prepareStatement("select distinct concept_set.codeset_id, bucket from enclave_concept.concept_set, enclave_concept.zenodo_deposit "
+														+ "where provisional_approval_date is not null "
+														+ "and concept_set.codeset_id = zenodo_deposit.codeset_id "
+														+ "and not exists (select codeset_id from enclave_concept.zenodo_file_raw "
+														+ "					where concept_set.codeset_id=zenodo_file_raw.codeset_id)");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
 			int id = rs.getInt(1);
-			JSONObject file = addFile(creation.getJSONObject("links").getString("bucket"), id);
-			PreparedStatement filestmt = conn.prepareStatement("insert into enclave_concept.zenodo_file_raw values(?, ?::jsonb)");
+			String bucket = rs.getString(2);
+			JSONObject file = addFile(bucket, id, "pdf");
+			PreparedStatement filestmt = conn.prepareStatement("insert into enclave_concept.zenodo_file_raw values(?, ?::jsonb, 'pdf')");
 			filestmt.setInt(1, id);
 			filestmt.setString(2, file.toString(3));
 			filestmt.execute();
 			filestmt.close();
+			
+			if ((new File("concepts/" + id + ".json")).exists()) {
+				JSONObject jsonFile = addFile(bucket, id, "json");
+				PreparedStatement jsonFilestmt = conn.prepareStatement("insert into enclave_concept.zenodo_file_raw values(?, ?::jsonb, 'json')");
+				jsonFilestmt.setInt(1, id);
+				jsonFilestmt.setString(2, jsonFile.toString(3));
+				jsonFilestmt.execute();
+				jsonFilestmt.close();
+			}
 			
 			if (++count % 90 == 0)
 				Thread.sleep(30*1000);
@@ -173,9 +182,9 @@ public class Publisher {
 		}
 	}
 	
-	static JSONObject addFile(String prefix, int concept_set_id) throws IOException {
+	static JSONObject addFile(String prefix, int concept_set_id, String suffix) throws IOException {
 		// configure the connection
-		URL uri = new URL(prefix + "/" + concept_set_id + ".pdf");
+		URL uri = new URL(prefix + "/" + concept_set_id + "." + suffix);
 		logger.info("url: " + uri);
 		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
 		con.setRequestMethod("PUT"); // type: POST, PUT, DELETE, GET
@@ -185,7 +194,7 @@ public class Publisher {
 		con.setDoInput(true);
 
 		OutputStream outputStream = con.getOutputStream();
-        FileInputStream inputStream = new FileInputStream(new File("concepts/" + concept_set_id + ".pdf"));
+        FileInputStream inputStream = new FileInputStream(new File("concepts/" + concept_set_id + "." + suffix));
         byte[] buffer = new byte[4096];
         int bytesRead = -1;
         while ((bytesRead = inputStream.read(buffer)) != -1) {

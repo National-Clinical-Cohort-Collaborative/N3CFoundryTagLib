@@ -92,17 +92,19 @@ select
 	raw->>'title' as title,
 	(raw->>'created')::date as created,
 	(raw->>'modified')::date as modified,
+	((raw->>'links')::jsonb)->>'bucket' as bucket,
 	'https://doi.org/'||(((((raw->>'metadata')::jsonb)->>'prereserve_doi')::jsonb)->>'doi') as doi
 from zenodo_deposit_raw
 ;
 
-create table zenodo_file_raw(codeset_id int, raw jsonb);
+create table zenodo_file_raw(codeset_id int, raw jsonb, suffix text);
 
 create view zenodo_file as
 select
 	codeset_id,
 	(raw->>'created')::date as created,
 	(raw->>'updated')::date as updated,
-	((raw->>'links')::jsonb)->>'self' as url
+	((raw->>'links')::jsonb)->>'self' as url,
+	suffix
 from zenodo_file_raw
 ;
