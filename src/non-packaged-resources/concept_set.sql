@@ -92,7 +92,9 @@ select
 	raw->>'title' as title,
 	(raw->>'created')::date as created,
 	(raw->>'modified')::date as modified,
+	raw->>'submitted' as submitted,
 	((raw->>'links')::jsonb)->>'bucket' as bucket,
+	((raw->>'links')::jsonb)->>'publish' as publish,
 	'https://doi.org/'||(((((raw->>'metadata')::jsonb)->>'prereserve_doi')::jsonb)->>'doi') as doi
 from zenodo_deposit_raw
 ;
@@ -108,3 +110,10 @@ select
 	suffix
 from zenodo_file_raw
 ;
+
+create table zenodo_published (
+	codeset_id int,
+	published timestamp
+	);
+	
+	

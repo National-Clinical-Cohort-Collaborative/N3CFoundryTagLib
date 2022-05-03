@@ -50,7 +50,8 @@ public class Publisher {
 			token = zenodo_props.getProperty("access_token");
 		
 //		reserve();
-		deposit();
+//		deposit();
+		publish();
 	}
 	
 	static void reserve() throws SQLException, IOException {
@@ -110,6 +111,59 @@ public class Publisher {
 		conn.commit();
 	}
 	
+	static void publish() throws IOException, JSONException, SQLException, InterruptedException {
+		int count = 0;
+		PreparedStatement stmt = conn.prepareStatement("select distinct concept_set.codeset_id, publish from enclave_concept.concept_set, enclave_concept.zenodo_deposit "
+														+ "where not exists (select codeset_id from enclave_concept.zenodo_published "
+														+ "						where zenodo_published.codeset_id = zenodo_deposit.codeset_id) "
+														+ "and concept_set.codeset_id = zenodo_deposit.codeset_id "
+														+ "and exists (select codeset_id from enclave_concept.zenodo_file_raw "
+														+ "					where concept_set.codeset_id=zenodo_file_raw.codeset_id)");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			String publish = rs.getString(2);
+			logger.info("publishing " + id);
+			publishDeposition(publish);
+			
+			PreparedStatement updateStmt = conn.prepareStatement("insert into enclave_concept.zenodo_published values(?, now())");
+			updateStmt.setInt(1, id);
+			updateStmt.execute();
+			updateStmt.close();
+		}
+		stmt.close();
+		
+		conn.commit();
+	}
+	
+	static JSONArray publishDeposition(String publishURI) throws IOException {
+		// configure the connection
+		URL uri = new URL(publishURI);
+		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+		con.setRequestMethod("POST"); // type: POST, PUT, DELETE, GET
+		con.setRequestProperty("Authorization", "Bearer " + token);
+		con.setRequestProperty("Content-Type", "application/json");
+		con.setDoOutput(true);
+		con.setDoInput(true);
+
+		// pull down the response JSON
+		con.connect();
+		logger.debug("response:" + con.getResponseCode());
+		if (con.getResponseCode() >= 400) {
+//			BufferedReader in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+//			JSONObject results = new JSONObject(new JSONTokener(in));
+			logger.error("error: " + con.getResponseCode());
+//			in.close();
+			return null;
+		} else {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			JSONObject results = new JSONObject(new JSONTokener(in));
+			logger.debug("results:\n" + results.toString(3));
+			in.close();
+			return null;
+		}
+	}
+		
 	static JSONArray fetchDepositions() throws IOException {
 		// configure the connection
 		URL uri = new URL("https://" + siteName + "/api/deposit/depositions");
@@ -155,6 +209,20 @@ public class Publisher {
 		metadata.accumulate("description", "A list of concepts from the standardized vocabulary that taken together describe a topic of interest for a study.");
 		metadata.accumulate("upload_type", "publication");
 		metadata.accumulate("publication_type", "workingpaper");
+
+		JSONObject creator = new JSONObject();
+		creator.accumulate("name", "Applicable Data Methods & Standards Domain Team");
+		creator.accumulate("affiliation", "N3C");
+		JSONArray creators = new JSONArray();
+		creators.put(creator);
+		metadata.put("creators", creators);
+		
+		JSONObject community = new JSONObject();
+		community.accumulate("identifier", "cd2h-covid");
+		JSONArray communities = new JSONArray();
+		communities.put(community);
+		metadata.put("communities", communities);
+		
 		JSONObject payload = new JSONObject();
 		payload.put("metadata", metadata);
 		logger.info("payload: " + payload.toString(3));
