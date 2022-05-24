@@ -32,6 +32,7 @@ public class ProjectRosterFetch {
 	logger.debug("hits:\n" + hits.toString(3));
 	for (int i = 0; i < hits.length(); i++) {
 	    JSONObject hit = hits.getJSONObject(i).getJSONObject("object");
+	    logger.debug("hit:" + hit.toString(3));
 	    try {
 		String title = hit.getString("title");
 		String uid = hit.getJSONObject("primaryKey").getString("project_uid");
@@ -40,9 +41,11 @@ public class ProjectRosterFetch {
 		String task_team = hit.getJSONObject("properties").getString("is_task_team_project");
 		String accessing_institution = hit.getJSONObject("properties").getString("accessing_institution");
 		String workspace_status = hit.getJSONObject("properties").getString("workspace_status");
+		String dur_project_id = hit.getJSONObject("properties").getString("dur_project_id");
 		logger.info("title: " + title + "\tlead investigator: " + investigator + "\ttask team: " + task_team + "\tworkspace_status: " + workspace_status);
 		logger.info("\taccessing_institution: " + accessing_institution);
-		PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_project values(?,?,?,?,?::boolean,?,?)");
+		logger.info("\tdur_project_id: " + dur_project_id);
+		PreparedStatement stmt = conn.prepareStatement("insert into n3c_admin.enclave_project values(?,?,?,?,?::boolean,?,?,?)");
 		stmt.setString(1, uid);
 		stmt.setString(2, title);
 		stmt.setString(3, statement);
@@ -50,6 +53,7 @@ public class ProjectRosterFetch {
 		stmt.setString(5, task_team);
 		stmt.setString(6, accessing_institution);
 		stmt.setString(7, workspace_status);
+		stmt.setString(8, dur_project_id);
 		stmt.execute();
 		stmt.close();
 	    } catch (JSONException e) {
@@ -57,6 +61,7 @@ public class ProjectRosterFetch {
 		logger.error("hit: " + hit.toString(3));
 	    }
 	}
+	conn.commit();
 	conn.close();
 	logger.info("total: " + hits.length());
     }
