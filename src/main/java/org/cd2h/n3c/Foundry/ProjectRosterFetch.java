@@ -26,7 +26,7 @@ public class ProjectRosterFetch {
 	JSONObject results = APIRequest.fetchJSONObject(prop_file, "n3c-website-approved-projects");
 	logger.trace("results:\n" + results.toString(3));
 
-	APIRequest.simpleStmt("truncate n3c_admin.enclave_project");
+	APIRequest.simpleStmt(conn, "truncate n3c_admin.enclave_project");
 	
 	JSONArray hits = results.getJSONArray("hits");
 	logger.debug("hits:\n" + hits.toString(3));
@@ -61,7 +61,6 @@ public class ProjectRosterFetch {
 		logger.error("hit: " + hit.toString(3));
 	    }
 	}
-	conn.commit();
 	conn.close();
 	logger.info("total: " + hits.length());
     }

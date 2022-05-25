@@ -288,4 +288,15 @@ public class APIRequest {
 			logger.error("Error in database initialization: ", e);
 		}
 	}
+
+	public static void simpleStmt(Connection conn, String queryString) {
+		try {
+			logger.info("executing " + queryString + "...");
+			PreparedStatement beginStmt = conn.prepareStatement(queryString);
+			beginStmt.executeUpdate();
+			beginStmt.close();
+		} catch (Exception e) {
+			logger.error("Error in database initialization: ", e);
+		}
+	}
 }
