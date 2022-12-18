@@ -25,6 +25,16 @@ public class QuestionDataFetchNew extends CohortDataFetch {
 		if (args.length > 2 && args[2].equals("new")) {
 		    logger.info("processing only new feeds!");
 			stmt = conn.prepareStatement("select rid from palantir.tiger_team_new where active and rid not in (select rid from palantir.tiger_team_file_new)");
+		} else if (args.length > 2) {
+		    logger.info("processing " + args[2]);
+			try {
+				JSONObject result = APIRequest.fetchDirectory(args[2]);
+				process(args[2],result);
+			} catch (Exception e) {
+				logger.error("skipping " + args[2] + " due to error");
+			}
+			conn.close();
+			return;
 		} else
 			stmt = conn.prepareStatement("select rid from palantir.tiger_team_new where active");
 		ResultSet rs = stmt.executeQuery();
