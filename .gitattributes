@@ -42,6 +42,7 @@ src/non-packaged-resources/cohort_comorbidity_data.sql -text
 src/non-packaged-resources/concept_set.sql -text
 src/non-packaged-resources/dashboard.sql -text
 src/non-packaged-resources/dashboard_map_data.sql -text
+src/non-packaged-resources/drupal.sql -text
 src/non-packaged-resources/jira.sql -text
 src/test/java/org/cd2h/n3c/Foundry/README.txt -text
 src/test/resources/README.txt -text
