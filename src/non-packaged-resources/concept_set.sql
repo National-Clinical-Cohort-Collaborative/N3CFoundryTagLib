@@ -1,3 +1,27 @@
+create view code_set_staging as select codeset_id,regexp_replace(atlas_json,'[\r\n]',' ','g')::jsonb as atlas_json from code_sets;
+
+create materialized view enclave_concept.code_set_concept as
+select
+	codeset_id,
+	(item->>'isExcluded')::boolean as is_excluded,
+	(item->>'includeMapped')::boolean as include_mapped,
+	(item->>'includeDescendants')::boolean as include_descendants,
+	(item->>'concept')::jsonb->>'DOMAIN_ID' as domain_id,
+	((item->>'concept')::jsonb->>'CONCEPT_ID')::int as concept_id,
+	(item->>'concept')::jsonb->>'CONCEPT_CODE' as concept_code,
+	(item->>'concept')::jsonb->>'CONCEPT_NAME' as concept_name,
+	(item->>'concept')::jsonb->>'VOCABULARY_ID' as vocabulary_id,
+	(item->>'concept')::jsonb->>'INVALID_REASON' as invalid_reason,
+	(item->>'concept')::jsonb->>'CONCEPT_CLASS_ID' as concept_class_id,
+	(item->>'concept')::jsonb->>'STANDARD_CONCEPT' as standard_concept,
+	(item->>'concept')::jsonb->>'INVALID_REASON_CAPTION' as invalid_reason_caption,
+	(item->>'concept')::jsonb->>'STANDARD_CONCEPT_CAPTION' as standard_concept_caption,
+	jsonb_pretty((item->>'concept')::jsonb) as concept
+from code_set_staging
+cross join lateral
+	jsonb_array_elements((atlas_json->>'items')::jsonb) with ordinality as t(item,seqnum)
+;
+
 create materialized view enclave_concept.code_set_concept as
 select
 	codeset_id,
@@ -17,7 +41,7 @@ select
 	jsonb_pretty(t.item::jsonb)
 from enclave_concept.code_sets
 cross join lateral
-    jsonb_array_elements_text((((regexp_replace(atlas_json,'\n',' ','g')::jsonb->>'expression')::jsonb)->>'items')::jsonb) with ordinality as t(item,seqnum)
+    jsonb_array_elements_text((((regexp_replace(atlas_json,'[\r\n]',' ','g')::jsonb->>'expression')::jsonb)->>'items')::jsonb) with ordinality as t(item,seqnum)
 where atlas_json is not null;
 
 create view enclave_concept.concept_set as

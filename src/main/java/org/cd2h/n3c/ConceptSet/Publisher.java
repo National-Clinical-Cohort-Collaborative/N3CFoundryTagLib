@@ -49,9 +49,14 @@ public class Publisher {
 		else
 			token = zenodo_props.getProperty("access_token");
 		
-//		reserve();
-//		deposit();
-		publish();
+		if ("reserve".equals(args[1]))
+			reserve();
+		else if ("deposit".equals(args[1]))
+			deposit();
+		else if ("publish".equals(args[1]))
+			publish();
+		else
+			logger.info("\nAction must be one of: reserve, deposit, publish\n\n");
 	}
 	
 	static void reserve() throws SQLException, IOException {

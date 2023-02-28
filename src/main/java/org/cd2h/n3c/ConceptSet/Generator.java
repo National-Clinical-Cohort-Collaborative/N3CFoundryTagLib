@@ -142,7 +142,7 @@ public class Generator {
 			addItem("Version", version);
 			addItem("Flag for Most Recent", is_most_recent_version);
 			addItem("Update Note", update_message);
-			addItem("Provisional Approval Date", provisional_approval_date);
+			addItem("Approval Date", provisional_approval_date);
 			addItem("Release Name", release_name);
 			addItem("Author", created_by);
 			addItem("Project Name(s)", "");
