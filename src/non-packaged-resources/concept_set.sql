@@ -66,12 +66,9 @@ from
 		enclave_concept.code_sets,
 		enclave_concept.concept_set_container_edited
 	where code_sets.concept_set_name = concept_set_container_edited.concept_set_id
-	  and concept_set_container_edited.status != 'Under Construction'
-	  and is_most_recent_version
-	) as foo
-left outer join
+	) as foo,
 	enclave_concept.provisional_approvals
-on (codeset_id=concept_set_id)
+	where codeset_id=concept_set_id
 ;
 
 create view enclave_concept.concept_set_display as
