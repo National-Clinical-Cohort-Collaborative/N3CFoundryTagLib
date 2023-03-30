@@ -71,16 +71,18 @@ public class QuestionDataFetchNew extends CohortDataFetch {
 				logger.error("skipping " + name + " due to error",e);
 			}
 			
-			PreparedStatement stmt = conn.prepareStatement("update palantir.tiger_team_file_new set updated = now() where rid = ? and file = ?");
-			stmt.setString(1, compass);
-			stmt.setString(2, generateSQLName(name, true));
+			PreparedStatement stmt = conn.prepareStatement("update palantir.tiger_team_file_new set updated = now(), metadata = ?::jsonb where rid = ? and file = ?");
+			stmt.setString(1, element.toString(3));
+			stmt.setString(2, compass);
+			stmt.setString(3, generateSQLName(name, true));
 			int matched = stmt.executeUpdate();
 			stmt.close();
 			
 			if (matched == 0) {
-				stmt = conn.prepareStatement("insert into palantir.tiger_team_file_new values(?, ?, now())");
+				stmt = conn.prepareStatement("insert into palantir.tiger_team_file_new values(?, ?, now(), ?::jsonb)");
 				stmt.setString(1, compass);
 				stmt.setString(2, generateSQLName(name, true));
+				stmt.setString(3, element.toString(3));
 				stmt.executeUpdate();
 				stmt.close();
 			}

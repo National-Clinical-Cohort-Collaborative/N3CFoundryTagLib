@@ -53,16 +53,18 @@ public class QuestionDataFetch extends CohortDataFetch {
 //				process(name, rid, false);
 			process(name, rid, true);
 			
-			PreparedStatement stmt = conn.prepareStatement("update palantir.tiger_team_file set updated = now() where rid = ? and file = ?");
-			stmt.setString(1, compass);
-			stmt.setString(2, generateSQLName(name, true));
+			PreparedStatement stmt = conn.prepareStatement("update palantir.tiger_team_file set updated = now(),metadata = ?::jsonb where rid = ? and file = ?");
+			stmt.setString(1, element.toString(3));
+			stmt.setString(2, compass);
+			stmt.setString(3, generateSQLName(name, true));
 			int matched = stmt.executeUpdate();
 			stmt.close();
 			
 			if (matched == 0) {
-				stmt = conn.prepareStatement("insert into palantir.tiger_team_file values(?, ?, now())");
+				stmt = conn.prepareStatement("insert into palantir.tiger_team_file values(?, ?, now(), ?::jsonb)");
 				stmt.setString(1, compass);
 				stmt.setString(2, generateSQLName(name, true));
+				stmt.setString(3, element.toString(3));
 				stmt.executeUpdate();
 				stmt.close();
 			}
