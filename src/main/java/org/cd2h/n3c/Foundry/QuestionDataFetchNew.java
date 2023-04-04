@@ -22,7 +22,10 @@ public class QuestionDataFetchNew extends CohortDataFetch {
 		
 		PreparedStatement stmt = null;
 
-		if (args.length > 2 && args[2].equals("new")) {
+		if (args.length > 2 && args[2].equals("metrics")) {
+			metrics();
+			return;
+		} else if (args.length > 2 && args[2].equals("new")) {
 		    logger.info("processing only new feeds!");
 			stmt = conn.prepareStatement("select rid from palantir.tiger_team_new where active and rid not in (select rid from palantir.tiger_team_file_new)");
 		} else if (args.length > 2) {
@@ -87,5 +90,83 @@ public class QuestionDataFetchNew extends CohortDataFetch {
 				stmt.close();
 			}
 		}
+	}
+	
+	static void metrics() throws SQLException {
+		PreparedStatement stmt = conn.prepareStatement("select file from palantir.tiger_team_file_new where updated is not null and aggregate_column is not null");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			String file = rs.getString(1);
+			generateMetrics(file);
+		}
+		stmt.close();
+	}
+	
+	static void generateMetrics(String fileName) throws SQLException {
+		PreparedStatement stmt = conn.prepareStatement("select updated,aggregate_column,aggregate_type from palantir.tiger_team_file_new where file = ? and (file,updated) not in (select file,updated from palantir.tiger_team_file_new_metrics)");
+		stmt.setString(1, fileName);
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			String updated = rs.getString(1);
+			String column = rs.getString(2);
+			String type = rs.getString(3);
+			logger.info(fileName + " : " + updated + " : " + column + " : " + type);
+			
+			PreparedStatement updateStmt = null;
+			switch(type) {
+			case "text":
+				updateStmt = conn.prepareStatement(""
+							+ "insert into palantir.tiger_team_file_new_metrics "
+							+ "select "
+							+ "		?,"
+							+ "		?::timestamp,"
+							+ "		count(*) as rows,"
+							+ "		sum(case"
+							+ "			when (" + column + " ~ '<20'::text or " + column + " is null) then 0"
+							+ "			else " + column + "::int"
+							+ "		end) as count "
+							+ "from n3c_questions_new." + fileName
+							+ "");
+				updateStmt.setString(1, fileName);
+				updateStmt.setString(2, updated);
+				updateStmt.executeUpdate();
+				updateStmt.close();
+				break;
+			case "int":
+				updateStmt = conn.prepareStatement(""
+						+ "insert into palantir.tiger_team_file_new_metrics "
+						+ "select "
+						+ "		?,"
+						+ "		?::timestamp,"
+						+ "		count(*) as rows,"
+						+ "		sum(" + column + ") as count "
+						+ "from n3c_questions_new." + fileName
+						+ "");
+				updateStmt.setString(1, fileName);
+				updateStmt.setString(2, updated);
+				updateStmt.executeUpdate();
+				updateStmt.close();
+				break;
+			case "skip":
+				updateStmt = conn.prepareStatement(""
+						+ "insert into palantir.tiger_team_file_new_metrics "
+						+ "select "
+						+ "		?,"
+						+ "		?::timestamp,"
+						+ "		count(*) as rows,"
+						+ "		0 as count "
+						+ "from n3c_questions_new." + fileName
+						+ "");
+				updateStmt.setString(1, fileName);
+				updateStmt.setString(2, updated);
+				updateStmt.executeUpdate();
+				updateStmt.close();
+				break;
+			default:
+				break;
+			}
+		}
+		stmt.close();
+		conn.commit();
 	}
 }
