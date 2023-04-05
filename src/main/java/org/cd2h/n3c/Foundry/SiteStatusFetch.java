@@ -40,7 +40,9 @@ public class SiteStatusFetch {
 			String rid = element.getString("rid");
 			logger.info("\trid:  " + rid);
 			process(name, rid);
+			conn.commit();
 		}
+		conn.close();
 	}
 
 	static void process(String  enclaveTableName, String fileID) throws IOException, SQLException {

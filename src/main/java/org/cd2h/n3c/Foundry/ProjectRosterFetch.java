@@ -61,6 +61,7 @@ public class ProjectRosterFetch {
 		logger.error("hit: " + hit.toString(3));
 	    }
 	}
+	conn.commit();
 	conn.close();
 	logger.info("total: " + hits.length());
     }

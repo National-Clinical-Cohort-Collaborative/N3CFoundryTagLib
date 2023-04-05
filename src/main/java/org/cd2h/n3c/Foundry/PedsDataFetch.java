@@ -22,6 +22,7 @@ public class PedsDataFetch extends CohortDataFetch {
 //		process(result);
 
 		process("hosptialized peds by month clamped over 20", prop_file.getProperty("peds.table"));
+		conn.commit();
 		conn.close();
 	}
 	

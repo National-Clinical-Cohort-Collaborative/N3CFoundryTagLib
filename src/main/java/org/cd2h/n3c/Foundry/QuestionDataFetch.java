@@ -32,6 +32,7 @@ public class QuestionDataFetch extends CohortDataFetch {
 			String compass = rs.getString(1);
 			JSONObject result = APIRequest.fetchDirectory(compass);
 			process(compass,result);
+			conn.commit();
 		}
 		
 		conn.close();

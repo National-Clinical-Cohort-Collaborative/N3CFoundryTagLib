@@ -33,6 +33,8 @@ public class UserBindingFetch {
 		attributes = CohortDataFetch.processLabels(contents);
 		CohortDataFetch.setTypes(attributes, contents);
 		storeData(CohortDataFetch.generateSQLName("user_binding"), attributes, contents);
+		conn.commit();
+		conn.close();
 	}
 
 	@SuppressWarnings("deprecation")

@@ -43,6 +43,7 @@ public class CohortDataFetch {
 			String rid  = element.getString("rid");
 			logger.info("\trid:  " +  rid);
 			process(name, rid);
+			conn.commit();
 		}
 
 		conn.close();

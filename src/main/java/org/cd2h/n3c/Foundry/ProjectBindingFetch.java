@@ -23,6 +23,7 @@ public class ProjectBindingFetch extends CohortDataFetch {
 		JSONObject result = APIRequest.fetchDirectory(prop_file.getProperty("project.binding"));
 		process(result);
 
+		conn.commit();
 		conn.close();
 	}
 

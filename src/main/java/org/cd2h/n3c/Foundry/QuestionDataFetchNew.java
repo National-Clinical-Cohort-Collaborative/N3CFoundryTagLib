@@ -19,20 +19,23 @@ public class QuestionDataFetchNew extends CohortDataFetch {
 		conn = APIRequest.getConnection(prop_file);
 		conn.setSchema("n3c_questions_new");
 		initializeReserveHash();
-		
+
 		PreparedStatement stmt = null;
 
 		if (args.length > 2 && args[2].equals("metrics")) {
 			metrics();
+			conn.commit();
 			return;
 		} else if (args.length > 2 && args[2].equals("new")) {
-		    logger.info("processing only new feeds!");
-			stmt = conn.prepareStatement("select rid from palantir.tiger_team_new where active and rid not in (select rid from palantir.tiger_team_file_new)");
+			logger.info("processing only new feeds!");
+			stmt = conn.prepareStatement(
+					"select rid from palantir.tiger_team_new where active and rid not in (select rid from palantir.tiger_team_file_new)");
 		} else if (args.length > 2) {
-		    logger.info("processing " + args[2]);
+			logger.info("processing " + args[2]);
 			try {
 				JSONObject result = APIRequest.fetchDirectory(args[2]);
-				process(args[2],result);
+				process(args[2], result);
+				conn.commit();
 			} catch (Exception e) {
 				logger.error("skipping " + args[2] + " due to error");
 			}
@@ -45,12 +48,13 @@ public class QuestionDataFetchNew extends CohortDataFetch {
 			String compass = rs.getString(1);
 			try {
 				JSONObject result = APIRequest.fetchDirectory(compass);
-				process(compass,result);
+				process(compass, result);
+				conn.commit();
 			} catch (Exception e) {
 				logger.error("skipping " + compass + " due to error");
 			}
 		}
-		
+
 		conn.close();
 	}
 	

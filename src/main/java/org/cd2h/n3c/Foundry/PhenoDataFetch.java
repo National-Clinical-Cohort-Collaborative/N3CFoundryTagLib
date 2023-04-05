@@ -27,6 +27,7 @@ public class PhenoDataFetch extends CohortDataFetch {
 		JSONObject result3 = APIRequest.fetchDirectory(prop_file.getProperty("pheno.directory3"));
 		process(result3);
 
+		conn.commit();
 		conn.close();
 	}
 	
