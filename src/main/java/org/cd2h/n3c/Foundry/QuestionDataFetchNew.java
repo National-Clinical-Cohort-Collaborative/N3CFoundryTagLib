@@ -107,7 +107,10 @@ public class QuestionDataFetchNew extends CohortDataFetch {
 	}
 	
 	static void generateMetrics(String fileName) throws SQLException {
-		PreparedStatement stmt = conn.prepareStatement("select updated,aggregate_column,aggregate_type from palantir.tiger_team_file_new where file = ? and (file,updated) not in (select file,updated from palantir.tiger_team_file_new_metrics)");
+		PreparedStatement stmt = conn.prepareStatement("select ((metadata->>'modified')::jsonb->>'time')::timestamp as updated,aggregate_column,aggregate_type "
+														+ "from palantir.tiger_team_file_new "
+														+ "where file = ? "
+														+ "  and (file,((metadata->>'modified')::jsonb->>'time')::timestamp) not in (select file,updated from palantir.tiger_team_file_new_metrics)");
 		stmt.setString(1, fileName);
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
