@@ -281,9 +281,13 @@ public class APIRequest {
 	public static void simpleStmt(String queryString) {
 		try {
 			logger.info("executing " + queryString + "...");
-			PreparedStatement beginStmt = getConnection().prepareStatement(queryString);
+			Connection conn = getConnection();
+			PreparedStatement beginStmt = conn.prepareStatement(queryString);
 			beginStmt.executeUpdate();
 			beginStmt.close();
+			if (!conn.getAutoCommit())
+				conn.commit();
+			conn.close();
 		} catch (Exception e) {
 			logger.error("Error in database initialization: ", e);
 		}
