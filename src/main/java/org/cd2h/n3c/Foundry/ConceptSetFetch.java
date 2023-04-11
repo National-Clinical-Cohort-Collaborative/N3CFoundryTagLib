@@ -44,6 +44,7 @@ public class ConceptSetFetch {
 			if (rid.equals(prop_file.getProperty("concept.member"))
 					|| rid.equals(prop_file.getProperty("concept.version"))
 					|| rid.equals(prop_file.getProperty("concept.provisional"))
+					|| rid.equals(prop_file.getProperty("concept.user"))
 					|| rid.equals(prop_file.getProperty("concept.project"))
 					|| rid.equals(prop_file.getProperty("concept.item"))
 					|| rid.equals(prop_file.getProperty("concept.container"))) {
