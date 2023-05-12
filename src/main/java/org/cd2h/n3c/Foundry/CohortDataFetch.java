@@ -70,7 +70,31 @@ public class CohortDataFetch {
 			attributes = processLabels(contents);
 		}
 		setTypes(attributes, contents);
-		storeData(generateSQLName(tableName), attributes, contents, truncate);
+		storeData(null, generateSQLName(tableName), attributes, contents, truncate);
+	}
+
+	static void process(String schema, String  enclaveTableName, String fileID) throws IOException, SQLException {
+		process(schema, enclaveTableName, fileID, true);
+	}
+	
+	static void process(String schema, String  enclaveTableName, String fileID, boolean truncate) throws IOException, SQLException {
+		String tableName = enclaveTableName;
+		if (tableName.startsWith("[CC] ") || tableName.startsWith("[CC[ "))
+			tableName = tableName.substring(5);
+		if (tableName.startsWith("[CC Export] "))
+			tableName = tableName.substring(12);
+		logger.info("table name: " + tableName + "\tfile ID: " + fileID);
+		List<?> contents = null;
+		try {
+			contents = APIRequest.fetchCSVFile(prop_file, fileID);
+			attributes = processLabels(contents);
+		} catch (NullPointerException e) {
+			logger.error("falling back to view fetch...");
+			contents = APIRequest.fetchViewCSVFile(fileID);
+			attributes = processLabels(contents);
+		}
+		setTypes(attributes, contents);
+		storeData(schema, generateSQLName(tableName), attributes, contents, truncate);
 	}
 
 	static Attribute[] processLabels(List<?> contents) {
@@ -157,9 +181,9 @@ public class CohortDataFetch {
 	}
 
 	@SuppressWarnings("deprecation")
-	static void storeData(String tableName, Attribute[] attributes, List<?> contents, boolean truncate) throws SQLException {
-		StringBuffer createBuffer = new StringBuffer("create table if not exists " + tableName + "(");
-		StringBuffer insertBuffer = new StringBuffer("insert into " + tableName + " values (");
+	static void storeData(String schema, String tableName, Attribute[] attributes, List<?> contents, boolean truncate) throws SQLException {
+		StringBuffer createBuffer = new StringBuffer("create table if not exists " + (schema == null ? "" : schema + ".") + tableName + "(");
+		StringBuffer insertBuffer = new StringBuffer("insert into " + (schema == null ? "" : schema + ".") + tableName + " values (");
 
 		for (int i = 0; i < attributes.length; i++) {
 			createBuffer.append((i == 0 ? "" : ", ") + attributes[i].label + " " + attributes[i].type);
@@ -169,14 +193,14 @@ public class CohortDataFetch {
 		createBuffer.append(")");
 
 		if (!truncate)
-			simpleStmt("drop table if exists " + tableName);
+			simpleStmt("drop table if exists " + (schema == null ? "" : schema + ".") + tableName);
 
 		logger.debug("create command: " + createBuffer);
 		if (load)
 			simpleStmt(createBuffer.toString());
 		
 		if (truncate)
-			simpleStmt("truncate table " + tableName);
+			simpleStmt("truncate table " + (schema == null ? "" : schema + ".") + tableName);
 
 		insertBuffer.append(")");
 		logger.debug("insert command: " + insertBuffer);
