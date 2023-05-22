@@ -61,7 +61,7 @@ public class ConceptSetFetch {
 			try {
 				JSONObject atlas = APIRequest.fetchCompassJSONObject("https://unite.nih.gov/blobster/api/salt/" + resourceURL + "/token");
 				logger.info("id: " + id + "\turl" + resourceURL);
-				logger.info(atlas.toString(3));
+				logger.debug(atlas.toString(3));
 				
 				PreparedStatement update = conn.prepareStatement("update code_sets set atlas_json = ? where codeset_id = ?");
 				update.setString(1, atlas.toString(3));
@@ -85,7 +85,12 @@ public class ConceptSetFetch {
 		if (tableName.startsWith("[CC Export] "))
 			tableName = tableName.substring(12);
 		logger.info("table name: " + tableName + "\tfile ID: " + fileID);
-		List<?> contents = APIRequest.fetchCSVFile(prop_file, fileID);
+		List<?> contents = null;
+		contents = APIRequest.fetchCSVFile(prop_file, fileID);
+		if (contents == null) {
+			logger.error("falling back to view fetch...");
+			contents = APIRequest.fetchViewCSVFile(fileID);
+		}
 		if (contents == null)
 			return;
 		attributes = CohortDataFetch.processLabels(contents);
@@ -113,6 +118,7 @@ public class ConceptSetFetch {
 		insertBuffer.append(")");
 		logger.debug("insert command: " + insertBuffer);
 
+		int recordCount = 0;
 		PreparedStatement insertStmt = conn.prepareStatement(insertBuffer.toString());
 		Iterator<?> iterator = contents.iterator();
 		iterator.next();
@@ -135,8 +141,11 @@ public class ConceptSetFetch {
 				else
 					insertStmt.setString(i + 1, contentArray[i].replace(" / ", "\n").trim());
 			}
-			insertStmt.executeUpdate();
+			insertStmt.addBatch();
+			if (recordCount++ % 1000 == 0)
+				insertStmt.executeBatch();
 		}
+		insertStmt.executeBatch();
 		insertStmt.close();
 	}
 
