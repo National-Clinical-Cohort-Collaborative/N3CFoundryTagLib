@@ -107,8 +107,204 @@ enclave_cohort.site_staging_new2 left outer join enclave_cohort.institution_mast
 on site_staging_new2.institutionid = institution_master.institutionid
 ;
 
-
 ---------------------------------------------
+
+create view n3c_maps.feed_master as 
+select
+	institutionid as ror_id,
+	institutionname as name,
+	case
+		when clinorgtype is null then 'Unaffiliated'
+		else clinorgtype
+	end as type,
+	gov::boolean,
+	nih::boolean,
+	'https://'||usabledomain as url,
+	latitude,
+	longitude
+from enclave_cohort.institution_master, ror.address
+where institutionid != ''
+  and institutionid = id
+  and institutionid not in (select ror_id from location_non_ror)
+union
+select
+	institutionid as ror_id,
+	institutionname as name,
+	case
+		when clinorgtype is null then 'Unaffiliated'
+		else clinorgtype
+	end as type,
+	gov::boolean,
+	nih::boolean,
+	'https://'||usabledomain as url,
+	latitude,
+	longitude
+from enclave_cohort.institution_master, location_non_ror
+where institutionid != ''
+  and institutionid = ror_id
+union
+select
+	institutionid as ror_id,
+	institutionname as name,
+	case
+		when clinorgtype is null then 'Unaffiliated'
+		else clinorgtype
+	end as type,
+	gov::boolean,
+	nih::boolean,
+	'https://'||usabledomain as url,
+	0 as latitude,
+	0 as longitude
+from enclave_cohort.institution_master
+where institutionid != ''
+  and institutionid not in (select id from ror.address)
+  and institutionid not in (select ror_id from location_non_ror)
+union
+select distinct
+	ror_id,
+	organization.name,
+	'Unaffiliated' as type,
+	false as gov,
+	false as nih,
+	link as url,
+	latitude,
+	longitude
+from scholar_profile.authorship_map, ror.organization, ror.address, ror.link
+where authorship_map.ror_id = organization.id
+  and organization.id = address.id
+  and organization.id = link.id
+  and link.seqnum = 1
+  and ror_id not in (select institutionid from enclave_cohort.institution_master where institutionid is not null)
+union
+select distinct
+	authorship_map.ror_id,
+	location_non_ror.name,
+	'Unaffiliated' as type,
+	false as gov,
+	false as nih,
+	'https://'||authorship_map.ror_id as url,
+	latitude,
+	longitude
+from scholar_profile.authorship_map, location_non_ror
+where authorship_map.ror_id = location_non_ror.ror_id
+  and authorship_map.ror_id != 'http'
+  and authorship_map.ror_id not in (select institutionid from enclave_cohort.institution_master where institutionid is not null)
+;
+
+create view staging_dta_available as
+select
+	ror_id,
+	name,
+	url,
+	regexp_replace(type, ' .*', '') as type,
+	cdm as data_model,
+	case
+		when processed_in_foundry and released then 'available'
+		when processed_in_foundry then 'submitted'
+		else 'pending'
+	end as status,
+	latitude,
+	longitude
+from feed_master,site_mapping,site_status_for_export
+where feed_master.ror_id=site_mapping.ror
+  and site_mapping.abbreviation=site_status_for_export.abbreviation
+;
+
+create view staging_dta_pending as
+select
+	ror_id,
+	name,
+	url,
+	regexp_replace(type, ' .*', '') as type,
+	'pending' as data_model,
+	'pending' as status,
+	latitude,
+	longitude
+from feed_master 
+where ror_id in (select institutionid from n3c_admin.dta_master where dtaexecuted is not null)
+  and ror_id not in (select ror_id from staging_dta_available)
+;
+
+create materialized view contributing_sites as
+select * from staging_dta_available
+union
+select * from staging_dta_pending
+;
+
+--------------------------------------------
+
+-- publications-map.jsp (Inter-institutional Publications Map)
+--		overview/publication_map/publication_map.jsp
+--			modules/publication_map.jsp
+--				modules/collaboration_map_code.jsp
+--					feeds/sitePublications.jsp
+--						n3c_collaboration.publication_organization
+--							publication_organization_class
+--								scholar_profile.authorship
+--								scholar_profile.authorship_map
+--								ror.organization
+--								organization_class
+--							ror.address (lat/long)
+--							location_non_ror (lat/long)
+--					feeds/sitePublicationEdges.jsp
+--						n3c_collaboration.publication_edge
+--							scholar_profile.authorship
+--							scholar_profile.authorship_map
+--					feeds/sitePublicationLegend.jsp
+--						n3c_collaboration.publication_organization
+--						n3c_dashboard.site_map (dimension definition)
+
+-- collaboration.jsp (Inter-institutional Collaboration Map)
+--		overview/collaboration_map/collaboration_map.jsp
+--			modules/collaboration_map.jsp
+--				modules/collaboration_map_code.jsp
+--					feeds/siteCollaborations.jsp
+--						n3c_collaboration.collaboration_organization
+--							organization_organization
+--								palantir.n3c_user
+--								organization_class
+--									enclave_cohort.institution_master
+--								n3c_admin.enclave_project_members
+--							ror.address (lat/long)
+--							location_non_ror (lat/long)
+--					feeds/siteCollaborationEdges.jsp
+--						n3c_collaboration.collaboration_edge
+--							n3c_admin.enclave_project_members
+--							palantir.n3c_user
+--							organization_organization
+--							organization_project
+--					feeds/siteCollaborationLegend.jsp
+--						n3c_collaboration.collaboration_organization
+--						n3c_dashboard.site_map (dimension definition)
+
+-- contributing-sites.jsp (Institutions Contributing Data)
+--		overview/contributing_sites/contributing_sites.jsp
+--			modules/site_map.jsp
+--				modules/site_map_code.jsp
+--					feeds/siteLocations.jsp
+--						n3c_maps.sites
+
+-- new_ph/severity_region/map1.jsp (Regional Distribution of COVID+ Patients)
+--		severity_region/feeds/regions.jsp
+--			n3c_questions_new.cases_by_severity_by_state_censored_regional_distribution
+--			n3c_dashboard.state_map
+--			n3c_dashboard.severity_map
+--			n3c_maps.sites
+--				staging_enclave
+--					site_mapping
+--					ror.address (lat/long)
+--					site_status_for_export
+--					enclave_cohort.institution_master
+--				staging_pending
+--					n3c_admin.dta_master
+--					ror.address (lat/long)
+--					enclave_cohort.institution_master
+--				staging_no_ror
+--					n3c_admin.dta_master
+--					site_mapping
+--					ror.address (lat/long)
+--					enclave_cohort.institution_master
+--			ror.address
 
 create schema n3c_maps;
 
@@ -117,7 +313,7 @@ create table n3c_maps.site_mapping (
 	ror text
 	);
 
-create table site_statis_for_export (
+create table site_status_for_export (
 	processed_in_foundry boolean,
 	released boolean,
 	site_name text,
