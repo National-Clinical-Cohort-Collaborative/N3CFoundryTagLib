@@ -18,6 +18,8 @@ public class DashboardDataFetch extends CohortDataFetch {
 		prop_file = PropertyLoader.loadProperties("n3c_foundry");
 		conn = APIRequest.getConnection(prop_file);
 		initializeReserveHash();
+		
+		forceTextHash.put("postal_code", "postal_code");
 
 		PreparedStatement stmt = null;
 

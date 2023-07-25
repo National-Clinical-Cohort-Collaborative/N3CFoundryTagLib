@@ -26,6 +26,8 @@ public class CohortDataFetch {
 	static Attribute[] attributes = null;
 	static Hashtable<String, String> attributeHash = null;
 	static Hashtable<String, String> reservedHash = new Hashtable<String, String>();
+	
+	static Hashtable<String, String> forceTextHash = new Hashtable<String, String>();
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
 		PropertyConfigurator.configure(args[0]);
@@ -134,6 +136,11 @@ public class CohortDataFetch {
 	}
 
 	static void setType(Attribute theAttribute, List<?> contents) {
+		logger.info("column:" + theAttribute);
+		if (forceTextHash.containsKey(theAttribute.label)) {
+			theAttribute.type = "text";
+			return;
+		}
 		if (isType(theAttribute.index, "-?[0-9]*", contents)) {
 			if (isInt(theAttribute.index,contents))
 				theAttribute.type = "int";
