@@ -46,6 +46,7 @@ where atlas_json is not null;
 
 create view enclave_concept.concept_set as
 select
+	'recommended' as set_type,
 	foo.*,
 	provisional_approval_date,
 	release_name
@@ -68,6 +69,32 @@ from
 	where code_sets.concept_set_name = concept_set_container_edited.concept_set_id
 	) as foo,
 	enclave_concept.provisional_approvals
+	where codeset_id=concept_set_id
+union
+select
+	'user' as set_type,
+	foo.*,
+	date_submitted_zenodo as provisional_approval_date,
+	release_name
+from
+	(select
+		codeset_id,
+		alias,
+		code_sets.intention,
+		version,
+		is_most_recent_version,
+		update_message,
+		code_sets.created_by,
+		limitations,
+		issues,
+		provenance,
+		jsonb_pretty(regexp_replace(atlas_json,'\n',' ','g')::jsonb) as json
+	from
+		enclave_concept.code_sets,
+		enclave_concept.concept_set_container_edited
+	where code_sets.concept_set_name = concept_set_container_edited.concept_set_id
+	) as foo,
+	enclave_concept.user_submitted_concept_sets_for_zenodo
 	where codeset_id=concept_set_id
 ;
 

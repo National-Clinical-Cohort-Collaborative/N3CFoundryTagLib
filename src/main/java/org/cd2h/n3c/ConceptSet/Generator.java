@@ -58,7 +58,6 @@ public class Generator {
 		
 		fontProgram = FontProgramFactory.createFont("/fonts/Symbola.ttf", true);
 
-//		generateConceptSetsPanDoc();
 		generateConceptSetIText();
 	}
 	
@@ -77,7 +76,8 @@ public class Generator {
 				+ "					limitations,"
 				+ "					issues,"
 				+ "					provenance,"
-				+ "					json"
+				+ "					json,"
+				+ "					set_type"
 				+ "				from enclave_concept.concept_set_display");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
@@ -95,6 +95,7 @@ public class Generator {
 			String issues = rs.getString(11);
 			String provenance = rs.getString(12);
 			String json = rs.getString(13);
+			String set_type = rs.getString(14);
 			logger.info(id + " : " + alias);
 
 			if (alias == null)
@@ -129,7 +130,11 @@ public class Generator {
 			document.add(lead);
 			
 			Paragraph head = new Paragraph();
-			Text header = new Text("N3C Code Set: " + alias);
+			Text header = null;
+			if (set_type.equals("user"))
+				header = new Text("N3C Research Team Code Set: " + alias);
+			else
+				header = new Text("N3C Recommended Code Set: " + alias);
 			header.setFontSize(18);
 			header.setBold();
 			head.add(header);
