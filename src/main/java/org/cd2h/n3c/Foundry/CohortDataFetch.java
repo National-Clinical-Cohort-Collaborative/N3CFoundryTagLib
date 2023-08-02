@@ -136,7 +136,7 @@ public class CohortDataFetch {
 	}
 
 	static void setType(Attribute theAttribute, List<?> contents) {
-		logger.info("column:" + theAttribute);
+		logger.debug("column:" + theAttribute);
 		if (forceTextHash.containsKey(theAttribute.label)) {
 			theAttribute.type = "text";
 			return;
