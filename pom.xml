@@ -127,6 +127,17 @@
       	<version>7.1.16</version>
       	<type>pom</type>
       </dependency>
+		<dependency>
+		    <groupId>com.vladsch.flexmark</groupId>
+		    <artifactId>flexmark-all</artifactId>
+		    <version>0.64.8</version>
+		</dependency>
+<!-- https://mvnrepository.com/artifact/com.vladsch.flexmark/flexmark-html2md-converter -->
+<dependency>
+    <groupId>com.vladsch.flexmark</groupId>
+    <artifactId>flexmark-html2md-converter</artifactId>
+    <version>0.64.8</version>
+</dependency>
   </dependencies>
 	<build>
 	  	<plugins>
