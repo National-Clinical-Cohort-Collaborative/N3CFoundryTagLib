@@ -34,7 +34,9 @@ public class HTML2markdown  {
 			//         .set(Parser.EXTENSIONS, Collections.singletonList(HtmlConverterTextExtension.create()));
      	converter = FlexmarkHtmlConverter.builder(options).build();
      	
-     	map("press_release","description");
+     	map("testimonial","field_author_value");
+     	map("testimonial","field_quote_value");
+     	//map("press_release","description");
      	//map("webinar","topic");
      	//test();
 	}

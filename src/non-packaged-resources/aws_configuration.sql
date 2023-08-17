@@ -130,3 +130,21 @@ update strapi.files set alternative_text = (select distinct field_photo_alt from
 (select distinct filename,field_photo_alt from aws_drupal.file_managed,drupal.press_release where fid=field_photo_target_id ) as foo
 where files.name = filename limit 1)
 ;
+
+select * from
+(select entity_id,field_author_value from aws_drupal.node__field_author
+where entity_id in (select entity_id from aws_drupal.node__field_testimonial where field_testimonial_value =1 and bundle='quote')) as foo
+natural join
+(select entity_id,field_quote_value from aws_drupal.node__field_quote
+where entity_id in (select entity_id from aws_drupal.node__field_testimonial where field_testimonial_value =1 and bundle='quote')) as bar
+;
+
+insert into strapi.testimonials(quote,author,created_at,updated_at,published_at,created_by_id,updated_by_id)
+select
+	field_quote_value,
+	field_author_value,
+	now(),now(),now(),
+	1,1
+from drupal.testimonial
+;
+
