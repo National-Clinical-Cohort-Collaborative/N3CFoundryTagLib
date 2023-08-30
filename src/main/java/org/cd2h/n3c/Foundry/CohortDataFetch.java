@@ -200,7 +200,7 @@ public class CohortDataFetch {
 		createBuffer.append(")");
 
 		if (!truncate)
-			simpleStmt("drop table if exists " + (schema == null ? "" : schema + ".") + tableName);
+			simpleStmt("drop table if exists " + (schema == null ? "" : schema + ".") + tableName + " cascade");
 
 		logger.debug("create command: " + createBuffer);
 		if (load)
