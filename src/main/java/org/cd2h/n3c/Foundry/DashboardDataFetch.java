@@ -18,6 +18,7 @@ public class DashboardDataFetch extends CohortDataFetch {
 		prop_file = PropertyLoader.loadProperties("n3c_foundry");
 		conn = APIRequest.getConnection(prop_file);
 		initializeReserveHash();
+		boolean truncate = prop_file.getBooleanProperty("truncate", true);
 		
 		forceTextHash.put("postal_code", "postal_code");
 
@@ -40,7 +41,7 @@ public class DashboardDataFetch extends CohortDataFetch {
 				String schema = rs.getString(1);
 				try {
 					JSONObject result = APIRequest.fetchDirectory(args[2]);
-					process(schema, args[2], result);
+					process(schema, args[2], result, truncate);
 					conn.commit();
 				} catch (Exception e) {
 					logger.error("skipping " + args[2] + " due to error");
@@ -57,7 +58,7 @@ public class DashboardDataFetch extends CohortDataFetch {
 			String schema = rs.getString(2);
 			try {
 				JSONObject result = APIRequest.fetchDirectory(compass);
-				process(schema, compass, result);
+				process(schema, compass, result, truncate);
 				conn.commit();
 			} catch (Exception e) {
 				logger.error("skipping " + compass + " due to error");
@@ -67,7 +68,7 @@ public class DashboardDataFetch extends CohortDataFetch {
 		conn.close();
 	}
 	
-	static void process(String schema, String compass, JSONObject result) throws Exception {
+	static void process(String schema, String compass, JSONObject result, boolean truncate) throws Exception {
 		JSONArray  array  = result.getJSONArray("values");
 		for (int  i = 0; i < array.length();  i++)  {
 			JSONObject element  = array.getJSONObject(i);
@@ -82,7 +83,7 @@ public class DashboardDataFetch extends CohortDataFetch {
 //			else
 //				process(name, rid, false);
 			try {
-				process(schema, name, rid, true);
+				process(schema, name, rid, truncate);
 			} catch (Exception e) {
 				logger.error("skipping " + name + " due to error",e);
 			}
