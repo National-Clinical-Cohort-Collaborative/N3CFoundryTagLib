@@ -19,4 +19,11 @@ public class LocalProperties extends Properties {
 	return Boolean.parseBoolean(super.getProperty(property));
     }
 
+    public boolean getBooleanProperty(String property, boolean theDefault) {
+	if (super.getProperty(property) == null)
+	    return theDefault;
+	
+	return Boolean.parseBoolean(super.getProperty(property));
+    }
+
 }
