@@ -13,6 +13,8 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.cd2h.n3c.util.LocalProperties;
 import org.cd2h.n3c.util.PropertyLoader;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
@@ -61,6 +63,16 @@ public class Generator {
 		generateConceptSetIText();
 	}
 	
+	static JSONObject generateJSON(int id) {
+		JSONObject obj = new JSONObject();
+		obj.append("id", 1234);
+		JSONObject expr = new JSONObject();
+		JSONObject items = new JSONObject();
+		
+		obj.append("expression", expr);
+		return obj;
+	}
+	
 	static void generateConceptSetIText() throws IOException, SQLException {
 		int count = 0;
 		PreparedStatement stmt = conn.prepareStatement("select"
@@ -76,9 +88,10 @@ public class Generator {
 				+ "					limitations,"
 				+ "					issues,"
 				+ "					provenance,"
-				+ "					json,"
+				+ "					concept_json.json,"
 				+ "					set_type"
-				+ "				from enclave_concept.concept_set_display");
+				+ "				from enclave_concept.concept_set_display join enclave_concept.concept_json"
+				+ "					on (concept_set_display.codeset_id=concept_json.codeset_id");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
 			count++;
