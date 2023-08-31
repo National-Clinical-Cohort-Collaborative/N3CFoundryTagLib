@@ -91,7 +91,7 @@ public class Generator {
 				+ "					concept_json.json,"
 				+ "					set_type"
 				+ "				from enclave_concept.concept_set_display join enclave_concept.concept_json"
-				+ "					on (concept_set_display.codeset_id=concept_json.codeset_id");
+				+ "					on (concept_set_display.codeset_id=concept_json.codeset_id)");
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
 			count++;
