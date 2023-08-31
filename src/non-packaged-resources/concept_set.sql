@@ -163,5 +163,38 @@ create table zenodo_published (
 	codeset_id int,
 	published timestamp
 	);
-	
-	
+
+create view enclave_concept.concept_json_staging as
+select
+		concept_id,
+		concept_name,
+		domain_id,
+		vocabulary_id,
+		concept_class_id,
+		coalesce(standard_concept, '') as standard_concept,
+		coalesce(standard_concept_caption, '') as standard_concept_caption,
+		concept_code,
+		coalesce(invalid_reason, 'V') as invalid_reason,
+		coalesce(invalid_reason_caption, 'Valid') as invalid_reason_caption
+	from enclave_concept.concept
+	natural left join enclave_concept.standard_concept_map
+	natural left join enclave_concept.invalid_reason_map
+;
+
+create view enclave_concept.concept_json_staging2 as
+select
+	codeset_id,
+	json_build_object('includedescendants',includedescendants,'concept',to_jsonb(concept_json_staging)) as item
+from concept_json_staging natural join concept_set_version_item_rv_edited
+;
+
+create view enclave_concept.concept_json as
+select
+	codeset_id,
+	jsonb_pretty(json_build_object(
+		'id', codeset_id,
+		'name', alias,
+		'expression', json_build_object('items',(select json_agg(item) from enclave_concept.concept_json_staging2 as foo where foo.codeset_id = concept_set_display.codeset_id))
+	)::jsonb) as json
+from concept_set_display
+;
