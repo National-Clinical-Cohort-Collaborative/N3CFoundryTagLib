@@ -76,7 +76,7 @@ public class Generator {
 	static void generateConceptSetIText() throws IOException, SQLException {
 		int count = 0;
 		PreparedStatement stmt = conn.prepareStatement("select"
-				+ "					codeset_id,"
+				+ "					concept_set_display.codeset_id,"
 				+ "					alias,"
 				+ "					intention,"
 				+ "					version,"
