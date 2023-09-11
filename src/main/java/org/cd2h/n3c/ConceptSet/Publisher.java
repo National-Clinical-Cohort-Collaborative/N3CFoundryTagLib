@@ -55,6 +55,14 @@ public class Publisher {
 			deposit();
 		else if ("publish".equals(args[1]))
 			publish();
+		else if ("version".equals(args[1]))
+			version();
+		else if ("version_deposit".equals(args[1]))
+			version_deposit();
+		else if ("version_publish".equals(args[1]))
+			version_publish();
+		else if ("version_list".equals(args[1]))
+			version_list();
 		else
 			logger.info("\nAction must be one of: reserve, deposit, publish\n\n");
 	}
@@ -129,10 +137,11 @@ public class Publisher {
 			int id = rs.getInt(1);
 			String publish = rs.getString(2);
 			logger.info("publishing " + id);
-			publishDeposition(publish);
+			JSONObject deposit = publishDeposition(publish);
 			
-			PreparedStatement updateStmt = conn.prepareStatement("insert into enclave_concept.zenodo_published values(?, now())");
+			PreparedStatement updateStmt = conn.prepareStatement("insert into enclave_concept.zenodo_published_raw values(?, now(), ?::jsonb)");
 			updateStmt.setInt(1, id);
+			updateStmt.setString(2, deposit.toString(3));
 			updateStmt.execute();
 			updateStmt.close();
 		}
@@ -141,7 +150,121 @@ public class Publisher {
 		conn.commit();
 	}
 	
-	static JSONArray publishDeposition(String publishURI) throws IOException {
+	static void version() throws SQLException, IOException {
+		PreparedStatement stmt = conn.prepareStatement("select distinct codeset_id, alias,zenodo_id from enclave_concept.concept_set natural join enclave_concept.zenodo_deposit where codeset_id not in (select codeset_id from enclave_concept.zenodo_version_raw)");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			String alias = rs.getString(2);
+			int zid = rs.getInt(3);
+			logger.info("versioning: " + id + " : " + alias + " : " + zid);
+			
+			JSONObject version = newVersion(id,zid);
+			PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_version_raw(codeset_id,raw) values(?,?::jsonb)");
+			depstmt.setInt(1, id);
+			depstmt.setString(2, version.toString(3));
+			depstmt.execute();
+			depstmt.close();
+			conn.commit();
+		}
+		stmt.close();
+		
+		stmt = conn.prepareStatement("select distinct codeset_id, zenodo_id,latest_draft from enclave_concept.zenodo_version where codeset_id not in (select codeset_id from enclave_concept.zenodo_version_deposition_raw)");
+		rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			int zid = rs.getInt(2);
+			String latest = rs.getString(3);
+			logger.info("versioning draft: " + id + " : " + latest + " : " + zid);
+			
+			JSONObject version = versionDeposition(latest);
+			PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_version_deposition_raw(codeset_id,raw) values(?,?::jsonb)");
+			depstmt.setInt(1, id);
+			depstmt.setString(2, version.toString(3));
+			depstmt.execute();
+			depstmt.close();
+			conn.commit();
+		}
+		stmt.close();
+	}
+	
+	static void version_deposit() throws IOException, JSONException, SQLException, InterruptedException {
+		int count = 0;
+		PreparedStatement stmt = conn.prepareStatement("select codeset_id,zenodo_id,bucket from enclave_concept.zenodo_version_deposition where codeset_id not in (select codeset_id from enclave_concept.zenodo_version_file_raw)");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			int zid = rs.getInt(2);
+			String bucket = rs.getString(3);
+			JSONObject file = addFile(bucket, id, "pdf");
+			PreparedStatement filestmt = conn.prepareStatement("insert into enclave_concept.zenodo_version_file_raw values(?, ?::jsonb, 'pdf')");
+			filestmt.setInt(1, id);
+			filestmt.setString(2, file.toString(3));
+			filestmt.execute();
+			filestmt.close();
+			
+			if ((new File("concepts/" + id + ".json")).exists()) {
+				JSONObject jsonFile = addFile(bucket, id, "json");
+				PreparedStatement jsonFilestmt = conn.prepareStatement("insert into enclave_concept.zenodo_version_file_raw values(?, ?::jsonb, 'json')");
+				jsonFilestmt.setInt(1, id);
+				jsonFilestmt.setString(2, jsonFile.toString(3));
+				jsonFilestmt.execute();
+				jsonFilestmt.close();
+			}
+			
+			if (++count % 45 == 0)
+				Thread.sleep(30*1000);
+
+			conn.commit();
+		}
+		stmt.close();
+
+		JSONArray result = fetchDepositions();
+		logger.info("depositions: " + result.toString(3));
+		
+	}
+	
+	static void version_publish() throws SQLException, IOException {
+		PreparedStatement stmt = conn.prepareStatement("select codeset_id,zenodo_id,publish from enclave_concept.zenodo_version_deposition where codeset_id not in (select codeset_id from enclave_concept.zenodo_version_published)");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			int zid = rs.getInt(2);
+			String publish = rs.getString(3);
+			JSONObject deposit = publishDeposition(publish);
+			
+			PreparedStatement updateStmt = conn.prepareStatement("insert into enclave_concept.zenodo_version_published_raw values(?, now(), ?::jsonb)");
+			updateStmt.setInt(1, id);
+			updateStmt.setString(2, deposit.toString(3));
+			updateStmt.execute();
+			updateStmt.close();
+		}
+		stmt.close();
+		
+		conn.commit();
+	}
+	
+	static void version_list() throws SQLException, IOException {
+		PreparedStatement stmt = conn.prepareStatement("select distinct codeset_id, zenodo_id,latest_draft from enclave_concept.zenodo_version");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			int zid = rs.getInt(2);
+			String latest = rs.getString(3);
+			logger.info("retrieving: " + id + " : " + latest + " : " + zid);
+			
+			JSONObject version = versionDeposition(latest);
+			PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_published_raw(codeset_id,raw) values(?,?::jsonb)");
+			depstmt.setInt(1, id);
+			depstmt.setString(2, version.toString(3));
+			depstmt.execute();
+			depstmt.close();
+			conn.commit();
+		}
+		stmt.close();
+	}
+	
+	static JSONObject publishDeposition(String publishURI) throws IOException {
 		// configure the connection
 		URL uri = new URL(publishURI);
 		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
@@ -165,7 +288,7 @@ public class Publisher {
 			JSONObject results = new JSONObject(new JSONTokener(in));
 			logger.debug("results:\n" + results.toString(3));
 			in.close();
-			return null;
+			return results;
 		}
 	}
 		
@@ -295,6 +418,64 @@ public class Publisher {
 		}
 	}
 		
+	static JSONObject newVersion(int id, int zid) throws IOException {
+		// configure the connection
+		URL uri = new URL("https://" + siteName + "/api/deposit/depositions/" + zid + "/actions/newversion");
+		logger.info("url: " + uri);
+		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+		con.setRequestMethod("POST"); // type: POST, PUT, DELETE, GET
+		con.setRequestProperty("Authorization", "Bearer " + token);
+		con.setRequestProperty("Content-Type", "application/json");
+		con.setDoOutput(true);
+		con.setDoInput(true);
+		
+		// pull down the response JSON
+		con.connect();
+		logger.debug("response:" + con.getResponseCode());
+		if (con.getResponseCode() >= 400) {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+			JSONObject results = new JSONObject(new JSONTokener(in));
+			logger.error("error:\n" + results.toString(3));
+			in.close();
+			return null;
+		} else {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			JSONObject results = new JSONObject(new JSONTokener(in));
+			logger.debug("results:\n" + results.toString(3));
+			in.close();
+			return results;
+		}
+	}
+	
+	static JSONObject versionDeposition(String url) throws IOException {
+		// configure the connection
+		URL uri = new URL(url);
+		logger.info("url: " + uri);
+		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+		con.setRequestMethod("GET"); // type: POST, PUT, DELETE, GET
+		con.setRequestProperty("Authorization", "Bearer " + token);
+		con.setRequestProperty("Content-Type", "application/json");
+		con.setDoOutput(true);
+		con.setDoInput(true);
+		
+		// pull down the response JSON
+		con.connect();
+		logger.debug("response:" + con.getResponseCode());
+		if (con.getResponseCode() >= 400) {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+			JSONObject results = new JSONObject(new JSONTokener(in));
+			logger.error("error:\n" + results.toString(3));
+			in.close();
+			return null;
+		} else {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			JSONObject results = new JSONObject(new JSONTokener(in));
+			logger.debug("results:\n" + results.toString(3));
+			in.close();
+			return results;
+		}
+	}
+	
 	public static Connection getConnection() throws SQLException, ClassNotFoundException {
 		Class.forName("org.postgresql.Driver");
 		Properties props = new Properties();
