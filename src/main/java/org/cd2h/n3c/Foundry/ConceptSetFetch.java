@@ -55,30 +55,6 @@ public class ConceptSetFetch {
 		}
 		
 		process("concept",prop_file.getProperty("concept.concept"));
-		
-//		PreparedStatement stmt = conn.prepareStatement("select codeset_id,atlas_json_resource_url from code_sets where atlas_json is null and atlas_json_resource_url is not null");
-//		ResultSet rs = stmt.executeQuery();
-//		while (rs.next()) {
-//			int id = rs.getInt(1);
-//			String resourceURL = rs.getString(2);
-//			try {
-//				JSONObject atlas = APIRequest.fetchCompassJSONObject("https://unite.nih.gov/blobster/api/salt/" + resourceURL + "/token");
-//				logger.info("id: " + id + "\turl" + resourceURL);
-//				logger.debug(atlas.toString(3));
-//				
-//				PreparedStatement update = conn.prepareStatement("update code_sets set atlas_json = ? where codeset_id = ?");
-//				update.setString(1, atlas.toString(3));
-//				update.setInt(2, id);
-//				update.execute();
-//				update.close();
-//				conn.commit();
-//			} catch (JSONException e) {
-//				logger.error("error retrieving JSON for id");
-//			} catch (IOException e) {
-//				logger.error("error retrieving JSON for id");
-//			}
-//		}
-//		stmt.close();
 	}
 
 	static void process(String  enclaveTableName, String fileID) throws IOException, SQLException {
