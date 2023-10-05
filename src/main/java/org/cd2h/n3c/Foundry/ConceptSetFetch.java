@@ -55,6 +55,7 @@ public class ConceptSetFetch {
 		}
 		
 		process("concept",prop_file.getProperty("concept.concept"));
+		process("concept_set_members",prop_file.getProperty("concept.member"));
 	}
 
 	static void process(String  enclaveTableName, String fileID) throws IOException, SQLException {
