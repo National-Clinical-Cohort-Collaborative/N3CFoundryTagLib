@@ -85,6 +85,7 @@ public class Generator {
 				+ "					provisional_approval_date,"
 				+ "					release_name,"
 				+ "					coalesce(name, first_name||' '||last_name) as author,"
+				+ "					omop_vocab_version,"
 				+ "					limitations,"
 				+ "					issues,"
 				+ "					provenance,"
@@ -104,11 +105,12 @@ public class Generator {
 			String provisional_approval_date = rs.getString(7);
 			String release_name = rs.getString(8);
 			String created_by = rs.getString(9);
-			String limitations = rs.getString(10);
-			String issues = rs.getString(11);
-			String provenance = rs.getString(12);
-			String json = rs.getString(13);
-			String set_type = rs.getString(14);
+			String omop_vocab_version = rs.getString(10);
+			String limitations = rs.getString(11);
+			String issues = rs.getString(12);
+			String provenance = rs.getString(13);
+			String json = rs.getString(14);
+			String set_type = rs.getString(15);
 			logger.info(id + " : " + alias);
 
 			if (alias == null)
@@ -161,6 +163,7 @@ public class Generator {
 			addItem("Update Note", update_message);
 			addItem("Approval Date", provisional_approval_date);
 			addItem("Release Name", release_name);
+			addItem("OMOP Vocabulary Version", omop_vocab_version);
 			addItem("Author", created_by);
 			addItem("Project Name(s)", "");
 			
