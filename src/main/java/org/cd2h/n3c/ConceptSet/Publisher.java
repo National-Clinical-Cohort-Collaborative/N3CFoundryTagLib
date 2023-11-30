@@ -17,6 +17,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import javax.servlet.jsp.JspTagException;
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.cd2h.n3c.util.LocalProperties;
@@ -55,8 +57,12 @@ public class Publisher {
 			deposit();
 		else if ("publish".equals(args[1]))
 			publish();
+		else if ("list".equals(args[1]))
+			list();
 		else if ("version".equals(args[1]))
-			version();
+			version(false);
+		else if ("version_full".equals(args[1]))
+			version(true);
 		else if ("version_deposit".equals(args[1]))
 			version_deposit();
 		else if ("version_publish".equals(args[1]))
@@ -150,9 +156,19 @@ public class Publisher {
 		conn.commit();
 	}
 	
-	static void version() throws SQLException, IOException {
-		PreparedStatement stmt = conn.prepareStatement("select distinct codeset_id, alias,zenodo_id from enclave_concept.concept_set natural join enclave_concept.zenodo_deposit where codeset_id not in (select codeset_id from enclave_concept.zenodo_version_raw)");
-		ResultSet rs = stmt.executeQuery();
+	static void version(boolean full) throws SQLException, IOException {
+		if (full) {
+			execute("truncate enclave_concept.zenodo_version_raw");
+			execute("truncate enclave_concept.zenodo_version_deposition_raw");
+			execute("truncate enclave_concept.zenodo_version_file_raw");
+			execute("truncate enclave_concept.zenodo_version_published_raw");
+		}
+		
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		stmt = conn.prepareStatement("select distinct codeset_id, alias,zenodo_id from enclave_concept.concept_set natural join enclave_concept.zenodo_deposit where codeset_id not in (select codeset_id from enclave_concept.zenodo_version_raw)");
+		rs = stmt.executeQuery();
 		while (rs.next()) {
 			int id = rs.getInt(1);
 			String alias = rs.getString(2);
@@ -231,6 +247,7 @@ public class Publisher {
 			int id = rs.getInt(1);
 			int zid = rs.getInt(2);
 			String publish = rs.getString(3);
+			logger.info("publish: " + id + " : " + zid + " : " + publish);
 			JSONObject deposit = publishDeposition(publish);
 			
 			PreparedStatement updateStmt = conn.prepareStatement("insert into enclave_concept.zenodo_version_published_raw values(?, now(), ?::jsonb)");
@@ -264,6 +281,48 @@ public class Publisher {
 		stmt.close();
 	}
 	
+	static void list() throws SQLException, IOException {
+		PreparedStatement stmt = conn.prepareStatement("select distinct codeset_id, zenodo_id,latest_draft from enclave_concept.zenodo_version");
+		ResultSet rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			int zid = rs.getInt(2);
+			String latest = rs.getString(3);
+			logger.info("retrieving: " + id + " : " + latest + " : " + zid);
+
+			URL uri = new URL("https://" + siteName + "/api/records/" + zid);
+			logger.info("url: " + uri);
+			HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+			con.setRequestMethod("GET"); // type: POST, PUT, DELETE, GET
+			con.setRequestProperty("Authorization", "Bearer " + token);
+			con.setRequestProperty("Content-Type", "application/json");
+			con.setDoOutput(true);
+			con.setDoInput(true);
+
+			// pull down the response JSON
+			con.connect();
+			logger.debug("response:" + con.getResponseCode());
+			if (con.getResponseCode() >= 400) {
+				BufferedReader in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+				JSONObject results = new JSONObject(new JSONTokener(in));
+				logger.error("error:\n" + results.toString(3));
+				in.close();
+			} else {
+				BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+				JSONObject results = new JSONObject(new JSONTokener(in));
+				logger.info("id: " + id + "\tzid: " + zid + "\tresults:\n" + results.toString(3));
+				in.close();
+
+				PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_published_raw(codeset_id,raw) values(?,?::jsonb)");
+				depstmt.setInt(1, id);
+				depstmt.setString(2, results.toString(3));
+				depstmt.execute();
+				depstmt.close();
+				conn.commit();
+			}
+		}
+	}
+	
 	static JSONObject publishDeposition(String publishURI) throws IOException {
 		// configure the connection
 		URL uri = new URL(publishURI);
@@ -278,10 +337,11 @@ public class Publisher {
 		con.connect();
 		logger.debug("response:" + con.getResponseCode());
 		if (con.getResponseCode() >= 400) {
-//			BufferedReader in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
-//			JSONObject results = new JSONObject(new JSONTokener(in));
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+			JSONObject results = new JSONObject(new JSONTokener(in));
 			logger.error("error: " + con.getResponseCode());
-//			in.close();
+			logger.error("results:\n" + results.toString(3));
+			in.close();
 			return null;
 		} else {
 			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -417,8 +477,43 @@ public class Publisher {
 			return results;
 		}
 	}
+	
+	static void versionClear(int id, int zid) throws IOException {
+		URL uri = new URL("https://" + siteName + "/api/deposit/depositions/" + zid + "/files");
+		logger.info("url: " + uri);
+		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
+		con.setRequestMethod("GET"); // type: POST, PUT, DELETE, GET
+		con.setRequestProperty("Authorization", "Bearer " + token);
+		con.setRequestProperty("Content-Type", "application/json");
+		con.setDoOutput(true);
+		con.setDoInput(true);
+		
+		// pull down the response JSON
+		con.connect();
+		logger.debug("response:" + con.getResponseCode());
+		if (con.getResponseCode() >= 400) {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+			JSONObject results = new JSONObject(new JSONTokener(in));
+			logger.error("error:\n" + results.toString(3));
+			in.close();
+		} else {
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			JSONArray results = new JSONArray(new JSONTokener(in));
+			logger.info("id: " + id + "\tzid: " + zid + "\tresults:\n" + results.toString(3));
+			in.close();
+			for (int i = 0; i < results.length(); i++) {
+				if (results.isNull(i))
+					continue;
+				JSONObject theObject = results.getJSONObject(i);
+				logger.info("object: " + theObject.toString(3));
+			}
+		}
+	}
 		
 	static JSONObject newVersion(int id, int zid) throws IOException {
+		// check for already existing files in this version and remove them
+		versionClear(id, zid);
+		
 		// configure the connection
 		URL uri = new URL("https://" + siteName + "/api/deposit/depositions/" + zid + "/actions/newversion");
 		logger.info("url: " + uri);
@@ -458,6 +553,18 @@ public class Publisher {
 		con.setDoOutput(true);
 		con.setDoInput(true);
 		
+		JSONObject metadata = new JSONObject();
+		metadata.accumulate("publication_date", "2023-11-30");
+		
+		JSONObject payload = new JSONObject();
+		payload.put("metadata", metadata);
+		logger.info("payload: " + payload.toString(3));
+		BufferedWriter out = new BufferedWriter(new OutputStreamWriter(con.getOutputStream()));
+		out.write(payload.toString());
+		out.flush();
+		out.close();
+
+
 		// pull down the response JSON
 		con.connect();
 		logger.debug("response:" + con.getResponseCode());
@@ -485,4 +592,11 @@ public class Publisher {
 		conn.setAutoCommit(false);
 		return conn;
 	}
+	
+	static void execute(String statement) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement(statement);
+        stmt.executeUpdate();
+        stmt.close();
+	}
+
 }
