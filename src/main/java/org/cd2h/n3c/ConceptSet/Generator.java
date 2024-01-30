@@ -183,7 +183,7 @@ public class Generator {
 			addItem("Issues", issues);
 			addItem("Provenance", provenance);
 			
-			substmt = conn.prepareStatement("select doi from enclave_concept.zenodo_deposit where codeset_id = ?");
+			substmt = conn.prepareStatement("select concept_doi from enclave_concept.zenodo_doi_map where codeset_id = ?");
 			substmt.setInt(1, id);
 			subrs = substmt.executeQuery();
 			while (subrs.next()) {

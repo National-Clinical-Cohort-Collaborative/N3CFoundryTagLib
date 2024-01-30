@@ -200,3 +200,19 @@ select
 	)::jsonb) as json
 from concept_set_display
 ;
+
+create table enclave_concept.zenodo_deposition_full_raw(raw jsonb);
+
+create view enclave_concept.zenodo_deposition_full as
+select
+	(raw->>'links')::jsonb->>'doi' as doi,
+	(raw->>'links')::jsonb->>'parent_doi' as concept_doi,
+	(raw->>'metadata')::jsonb->>'title' as title
+from enclave_concept.zenodo_deposition_full_raw
+;
+
+create view enclave_concept.zenodo_doi_map as
+select codeset_id,zenodo_deposit.doi,concept_doi from zenodo_deposit,zenodo_deposition_full where zenodo_deposit.doi=zenodo_deposition_full.doi
+union
+select codeset_id,zenodo_published.version_doi,concept_doi from zenodo_published,zenodo_deposition_full where zenodo_published.version_doi=zenodo_deposition_full.doi
+;

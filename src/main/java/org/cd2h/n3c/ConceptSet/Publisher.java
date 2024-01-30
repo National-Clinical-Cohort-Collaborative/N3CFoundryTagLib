@@ -60,16 +60,19 @@ public class Publisher {
 		else if ("list".equals(args[1]))
 			list();
 		else if ("version".equals(args[1]))
-			version(false);
+			version();
 		else if ("version_full".equals(args[1]))
-			version(true);
+			version_full();
 		else if ("version_deposit".equals(args[1]))
 			version_deposit();
 		else if ("version_publish".equals(args[1]))
 			version_publish();
 		else if ("version_list".equals(args[1]))
 			version_list();
-		else
+		else if ("deposition_list".equals(args[1])) {
+			fetchDepositions();
+			conn.commit();
+		} else
 			logger.info("\nAction must be one of: reserve, deposit, publish\n\n");
 	}
 	
@@ -156,14 +159,7 @@ public class Publisher {
 		conn.commit();
 	}
 	
-	static void version(boolean full) throws SQLException, IOException {
-		if (full) {
-			execute("truncate enclave_concept.zenodo_version_raw");
-			execute("truncate enclave_concept.zenodo_version_deposition_raw");
-			execute("truncate enclave_concept.zenodo_version_file_raw");
-			execute("truncate enclave_concept.zenodo_version_published_raw");
-		}
-		
+	static void version() throws SQLException, IOException {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
@@ -190,10 +186,57 @@ public class Publisher {
 		while (rs.next()) {
 			int id = rs.getInt(1);
 			int zid = rs.getInt(2);
-			String latest = rs.getString(3);
+			String alias = rs.getString(3);
+			String latest = rs.getString(4);
 			logger.info("versioning draft: " + id + " : " + latest + " : " + zid);
 			
-			JSONObject version = versionDeposition(latest);
+			JSONObject version = versionDeposition(id, alias, latest);
+			PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_version_deposition_raw(codeset_id,raw) values(?,?::jsonb)");
+			depstmt.setInt(1, id);
+			depstmt.setString(2, version.toString(3));
+			depstmt.execute();
+			depstmt.close();
+			conn.commit();
+		}
+		stmt.close();
+	}
+	
+	static void version_full() throws SQLException, IOException {
+		execute("truncate enclave_concept.zenodo_version_raw");
+		execute("truncate enclave_concept.zenodo_version_deposition_raw");
+		execute("truncate enclave_concept.zenodo_version_file_raw");
+		execute("truncate enclave_concept.zenodo_version_published_raw");
+		
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		stmt = conn.prepareStatement("select codeset_id, substring(doi from '[0-9]+$')::int as zenodo_id from enclave_concept.zenodo_master");
+		rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			int zid = rs.getInt(2);
+			logger.info("versioning: " + id + " : " + zid);
+			
+			JSONObject version = newVersion(id,zid);
+			PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_version_raw(codeset_id,raw) values(?,?::jsonb)");
+			depstmt.setInt(1, id);
+			depstmt.setString(2, version.toString(3));
+			depstmt.execute();
+			depstmt.close();
+			conn.commit();
+		}
+		stmt.close();
+		
+		stmt = conn.prepareStatement("select distinct codeset_id, zenodo_id, alias, latest_draft from enclave_concept.zenodo_version natural join enclave_concept.concept_set");
+		rs = stmt.executeQuery();
+		while (rs.next()) {
+			int id = rs.getInt(1);
+			int zid = rs.getInt(2);
+			String alias = rs.getString(3);
+			String latest = rs.getString(4);
+			logger.info("versioning draft: " + id + " : " + latest + " : " + zid);
+			
+			JSONObject version = versionDeposition(id, alias, latest);
 			PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_version_deposition_raw(codeset_id,raw) values(?,?::jsonb)");
 			depstmt.setInt(1, id);
 			depstmt.setString(2, version.toString(3));
@@ -235,8 +278,8 @@ public class Publisher {
 		}
 		stmt.close();
 
-		JSONArray result = fetchDepositions();
-		logger.info("depositions: " + result.toString(3));
+//		JSONArray result = fetchDepositions();
+//		logger.info("depositions: " + result.toString(3));
 		
 	}
 	
@@ -262,23 +305,23 @@ public class Publisher {
 	}
 	
 	static void version_list() throws SQLException, IOException {
-		PreparedStatement stmt = conn.prepareStatement("select distinct codeset_id, zenodo_id,latest_draft from enclave_concept.zenodo_version");
-		ResultSet rs = stmt.executeQuery();
-		while (rs.next()) {
-			int id = rs.getInt(1);
-			int zid = rs.getInt(2);
-			String latest = rs.getString(3);
-			logger.info("retrieving: " + id + " : " + latest + " : " + zid);
-			
-			JSONObject version = versionDeposition(latest);
-			PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_published_raw(codeset_id,raw) values(?,?::jsonb)");
-			depstmt.setInt(1, id);
-			depstmt.setString(2, version.toString(3));
-			depstmt.execute();
-			depstmt.close();
-			conn.commit();
-		}
-		stmt.close();
+//		PreparedStatement stmt = conn.prepareStatement("select distinct codeset_id, zenodo_id,latest_draft from enclave_concept.zenodo_version");
+//		ResultSet rs = stmt.executeQuery();
+//		while (rs.next()) {
+//			int id = rs.getInt(1);
+//			int zid = rs.getInt(2);
+//			String latest = rs.getString(3);
+//			logger.info("retrieving: " + id + " : " + latest + " : " + zid);
+//			
+//			JSONObject version = versionDeposition(latest);
+//			PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_published_raw(codeset_id,raw) values(?,?::jsonb)");
+//			depstmt.setInt(1, id);
+//			depstmt.setString(2, version.toString(3));
+//			depstmt.execute();
+//			depstmt.close();
+//			conn.commit();
+//		}
+//		stmt.close();
 	}
 	
 	static void list() throws SQLException, IOException {
@@ -352,9 +395,11 @@ public class Publisher {
 		}
 	}
 		
-	static JSONArray fetchDepositions() throws IOException {
+	// TODO - paginate this
+	
+	static JSONArray fetchDepositions() throws IOException, SQLException {
 		// configure the connection
-		URL uri = new URL("https://" + siteName + "/api/deposit/depositions");
+		URL uri = new URL("https://" + siteName + "/api/deposit/depositions?size=200");
 		logger.info("url: " + uri);
 		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
 		con.setRequestMethod("GET"); // type: POST, PUT, DELETE, GET
@@ -362,6 +407,8 @@ public class Publisher {
 		con.setRequestProperty("Content-Type", "application/json");
 		con.setDoOutput(true);
 		con.setDoInput(true);
+		
+		execute("truncate enclave_concept.zenodo_deposition_full_raw");
 
 		// pull down the response JSON
 		con.connect();
@@ -375,8 +422,19 @@ public class Publisher {
 		} else {
 			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 			JSONArray results = new JSONArray(new JSONTokener(in));
-			logger.debug("results:\n" + results.toString(3));
 			in.close();
+			for (int i = 0; i < results.length(); i++) {
+				if (results.isNull(i))
+					continue;
+				JSONObject theObject = results.getJSONObject(i);
+				logger.info("object: " + theObject.toString(3));
+				PreparedStatement depstmt = conn.prepareStatement("insert into enclave_concept.zenodo_deposition_full_raw(raw) values(?::jsonb)");
+				depstmt.setString(1, theObject.toString(3));
+				depstmt.execute();
+				depstmt.close();
+			}
+			in.close();
+			
 			return results;
 		}
 	}
@@ -542,19 +600,36 @@ public class Publisher {
 		}
 	}
 	
-	static JSONObject versionDeposition(String url) throws IOException {
+	static JSONObject versionDeposition(int id, String alias, String url) throws IOException {
 		// configure the connection
 		URL uri = new URL(url);
 		logger.info("url: " + uri);
 		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
-		con.setRequestMethod("GET"); // type: POST, PUT, DELETE, GET
+		con.setRequestMethod("PUT"); // type: POST, PUT, DELETE, GET
 		con.setRequestProperty("Authorization", "Bearer " + token);
 		con.setRequestProperty("Content-Type", "application/json");
 		con.setDoOutput(true);
 		con.setDoInput(true);
 		
 		JSONObject metadata = new JSONObject();
-		metadata.accumulate("publication_date", "2023-11-30");
+		metadata.accumulate("publication_date", "2024-01-30");
+		metadata.accumulate("title", "N3C Concept Set - " + id +" (" + alias + ")");
+		metadata.accumulate("description", "A list of concepts from the standardized vocabulary that taken together describe a topic of interest for a study.");
+		metadata.accumulate("upload_type", "publication");
+		metadata.accumulate("publication_type", "workingpaper");
+
+		JSONObject creator = new JSONObject();
+		creator.accumulate("name", "Applicable Data Methods & Standards Domain Team");
+		creator.accumulate("affiliation", "N3C");
+		JSONArray creators = new JSONArray();
+		creators.put(creator);
+		metadata.put("creators", creators);
+		
+		JSONObject community = new JSONObject();
+		community.accumulate("identifier", "cd2h-covid");
+		JSONArray communities = new JSONArray();
+		communities.put(community);
+		metadata.put("communities", communities);
 		
 		JSONObject payload = new JSONObject();
 		payload.put("metadata", metadata);
