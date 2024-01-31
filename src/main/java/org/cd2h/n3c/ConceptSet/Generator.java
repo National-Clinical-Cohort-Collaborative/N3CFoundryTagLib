@@ -13,7 +13,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.cd2h.n3c.util.LocalProperties;
 import org.cd2h.n3c.util.PropertyLoader;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.itextpdf.io.font.FontProgram;
@@ -47,6 +46,7 @@ public class Generator {
 	static String pathPrefix = "/usr/local/CD2H/lucene/";
 	static LocalProperties prop_file = null;
     static Connection conn = null;
+    static boolean versioning = false;
 
     static Document document = null;
     static FontProgram fontProgram = null;
@@ -60,6 +60,8 @@ public class Generator {
 		
 		fontProgram = FontProgramFactory.createFont("/fonts/Symbola.ttf", true);
 
+		if (args.length > 1 && "version".equals(args[1]))
+			versioning = true;
 		generateConceptSetIText();
 	}
 	
@@ -67,7 +69,6 @@ public class Generator {
 		JSONObject obj = new JSONObject();
 		obj.append("id", 1234);
 		JSONObject expr = new JSONObject();
-		JSONObject items = new JSONObject();
 		
 		obj.append("expression", expr);
 		return obj;
@@ -92,7 +93,9 @@ public class Generator {
 				+ "					concept_json.json,"
 				+ "					set_type"
 				+ "				from enclave_concept.concept_set_display join enclave_concept.concept_json"
-				+ "					on (concept_set_display.codeset_id=concept_json.codeset_id)");
+				+ "					on (concept_set_display.codeset_id=concept_json.codeset_id)"
+				+ (versioning ? "" : " where not exists (select codeset_id from enclave_concept.zenodo_file_raw where concept_set_display.codeset_id=zenodo_file_raw.codeset_id)")
+				);
 		ResultSet rs = stmt.executeQuery();
 		while (rs.next()) {
 			count++;
@@ -183,7 +186,10 @@ public class Generator {
 			addItem("Issues", issues);
 			addItem("Provenance", provenance);
 			
-			substmt = conn.prepareStatement("select concept_doi from enclave_concept.zenodo_doi_map where codeset_id = ?");
+			if (versioning)
+				substmt = conn.prepareStatement("select concept_doi from enclave_concept.zenodo_doi_map where codeset_id = ?");
+			else
+				substmt = conn.prepareStatement("select doi from enclave_concept.zenodo_deposit where codeset_id = ?");
 			substmt.setInt(1, id);
 			subrs = substmt.executeQuery();
 			while (subrs.next()) {

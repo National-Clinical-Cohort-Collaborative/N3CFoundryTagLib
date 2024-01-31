@@ -455,6 +455,7 @@ public class Publisher {
 		metadata.accumulate("description", "A list of concepts from the standardized vocabulary that taken together describe a topic of interest for a study.");
 		metadata.accumulate("upload_type", "publication");
 		metadata.accumulate("publication_type", "workingpaper");
+		metadata.accumulate("prereserve_doi", "Yes");
 
 		JSONObject creator = new JSONObject();
 		creator.accumulate("name", "Applicable Data Methods & Standards Domain Team");
