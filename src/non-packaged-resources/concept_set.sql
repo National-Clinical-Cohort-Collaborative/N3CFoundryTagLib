@@ -186,7 +186,12 @@ select
 create view enclave_concept.concept_json_staging2 as
 select
 	codeset_id,
-	json_build_object('includedescendants',includedescendants,'concept',to_jsonb(concept_json_staging)) as item
+	json_build_object(
+		'isexcluded',isexcluded,
+		'includedescendants',includedescendants,
+		'includemapped',includemapped,
+		'concept',to_jsonb(concept_json_staging)
+		) as item
 from concept_json_staging natural join concept_set_version_item_rv_edited
 ;
 
