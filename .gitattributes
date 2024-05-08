@@ -9,6 +9,7 @@
 .settings/org.maven.ide.eclipse.prefs -text
 /pom.xml -text svneol=unset#application/xml
 src/main/java/markdown/HTML2markdown.java -text
+src/main/java/org/cd2h/n3c/Airtable/DTADUAPull.java -text
 src/main/java/org/cd2h/n3c/ConceptSet/Generator.java -text
 src/main/java/org/cd2h/n3c/ConceptSet/Indexer.java -text
 src/main/java/org/cd2h/n3c/ConceptSet/Publisher.java -text
@@ -27,6 +28,8 @@ src/main/java/org/cd2h/n3c/Foundry/SiteStatusFetch.java -text
 src/main/java/org/cd2h/n3c/Foundry/UserBindingFetch.java -text
 src/main/java/org/cd2h/n3c/Jira/ExternalDatasetRequestFetch.java -text
 src/main/java/org/cd2h/n3c/util/APIRequest.java -text
+src/main/java/org/cd2h/n3c/util/Attribute.java -text
+src/main/java/org/cd2h/n3c/util/DatabaseAnalyzer.java -text
 src/main/java/org/cd2h/n3c/util/HttpPostMultipart.java -text
 src/main/java/org/cd2h/n3c/util/LocalProperties.java -text
 src/main/java/org/cd2h/n3c/util/PropertyLoader.java -text

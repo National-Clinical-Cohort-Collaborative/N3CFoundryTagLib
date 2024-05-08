@@ -87,10 +87,11 @@ public class APIRequest {
 	public static JSONObject fetchCompassJSONObject(String request) throws IOException {
 		// configure the connection
 		URL uri = new URL(request);
-		logger.debug("url: " + uri);
+		logger.info("url: " + uri);
 		logger.debug("token: " + prop_file.getProperty("api.token"));
 		HttpURLConnection con = (HttpURLConnection) uri.openConnection();
 		con.setRequestMethod("GET"); // type: POST, PUT, DELETE, GET
+		con.setRequestProperty("Content-Type", "application/json");
 		if (prop_file.getProperty("api.token") != null)
 			con.setRequestProperty("Authorization", "Bearer " + prop_file.getProperty("api.token"));
 
