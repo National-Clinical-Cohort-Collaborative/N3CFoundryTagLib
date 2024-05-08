@@ -39,6 +39,7 @@ src/main/resources/images/n3c_logo.png -text
 src/main/resources/images/n3c_logo_narrow.png -text
 src/main/resources/images/n3c_logo_wide.png -text
 src/non-packaged-resources/Model.clay -text svneol=unset#application/xml
+src/non-packaged-resources/airtable.sql -text
 src/non-packaged-resources/aws_configuration.sql -text
 src/non-packaged-resources/cohort_comorbidity_data.sql -text
 src/non-packaged-resources/concept_set.sql -text
