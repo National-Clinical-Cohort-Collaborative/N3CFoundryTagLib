@@ -210,7 +210,7 @@ public class Publisher {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
-		stmt = conn.prepareStatement("select codeset_id, substring(doi from '[0-9]+$')::int as zenodo_id from enclave_concept.zenodo_master");
+		stmt = conn.prepareStatement("select codeset_id, substring(doi from '[0-9]+$')::int as zenodo_id from enclave_concept.zenodo_master where doi is not null");
 		rs = stmt.executeQuery();
 		while (rs.next()) {
 			int id = rs.getInt(1);
