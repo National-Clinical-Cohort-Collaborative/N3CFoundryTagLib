@@ -55,9 +55,9 @@ select
 	(raw->'fields'->>'Institution Name')::text as inst_name,
 	raw->'fields'->'clinicalDuaContacts'->>0 as contacts,
 	raw->'fields'->'clinicalDuaSignatory'->>0 as signatory,
-	(raw->'fields'->>'clinicalDuaExecuted')::date as executed
+	(raw->'fields'->>'clinicalDuaDateExecuted')::date as executed
 from airtable.agreements_raw
-where raw->'fields'->>'clinicalDuaExecuted'::text is not null;
+where raw->'fields'->>'clinicalDuaDateExecuted'::text is not null;
 
 create or replace view airtable.tenant_dua_master as
 select
