@@ -78,7 +78,7 @@ public class DTADUAPull {
 			JSONArray array = result.getJSONArray("records");
 			for (int i = 0; i < array.length(); i++) {
 				JSONObject element = array.getJSONObject(i);
-				logger.info("record: " + element.getString("id"));
+				logger.debug("record: " + element.getString("id"));
 				PreparedStatement stmt = conn.prepareStatement("insert into " + tableName + " values(?::jsonb)");
 				stmt.setString(1, element.toString());
 				stmt.execute();
@@ -86,7 +86,7 @@ public class DTADUAPull {
 			}
 			
 			offset = result.optString("offset");
-			logger.info("offset: " + offset);
+			logger.debug("offset: " + offset);
 		} while (!offset.equals(""));
 	}
 
