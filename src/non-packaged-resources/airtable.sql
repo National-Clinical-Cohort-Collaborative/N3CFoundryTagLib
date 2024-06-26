@@ -17,14 +17,14 @@ select
 	(raw->>'createdTime')::timestamp as createdtime
 from airtable.inst_raw;
 
-create view airtable.citizens as
+create or replace view airtable.citizens as
 select
 	(raw->>'id')::text as id,
 	(raw->'fields'->>'firstName')::text as first_name,
 	(raw->'fields'->>'lastName')::text as last_name,
 	(raw->'fields'->>'email')::text as email,
 	(raw->'fields'->>'date')::date as date,
-	(raw->'fields'->>'covidOrTenant')::text as type,
+	(raw->'fields'->>'covidOrClinical')::text as type,
 	(raw->'fields'->>'firstNameMinor')::text as first_name_minor,
 	(raw->'fields'->>'lastNameMinor')::text as last_name_minor,
 	(raw->'fields'->>'emailMinor')::text as email_minor,
